@@ -1,0 +1,32 @@
+{
+  "headers": [
+    "\\u53f0\\u756a\\u53f7keyboard_arrow_down",
+    "BB\\u56de\\u6570keyboard_arrow_down",
+    "RB\\u56de\\u6570keyboard_arrow_down",
+    "ART\\u56de\\u6570keyboard_arrow_down",
+    "\\u73fe\\u5728\\u30b9\\u30bf\\u30fc\\u30c8keyboard_arrow_down",
+    "\\u6700\\u5927\\u6301\\u7389keyboard_arrow_down",
+    "\\u7d2f\\u8a08\\u30b9\\u30bf\\u30fc\\u30c8keyboard_arrow_down",
+    "BB\\u78ba\\u7387keyboard_arrow_down",
+    "RB\\u78ba\\u7387keyboard_arrow_down",
+    "ART\\u78ba\\u7387keyboard_arrow_down",
+    "\\u5408\\u6210\\u78ba\\u7387keyboard_arrow_down",
+    "7\\u65e5\\u9593\\u6700\\u9ad8BB\\u56de\\u6570keyboard_arrow_down"
+  ],
+  "first_row": [
+    [
+      "336",
+      "26",
+      "21",
+      "0",
+      "280",
+      "1391",
+      "7668",
+      "1/294",
+      "1/365",
+      "0",
+      "1/163",
+      "26"
+    ]
+  ]
+}

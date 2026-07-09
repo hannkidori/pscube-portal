@@ -1,0 +1,1171 @@
+$.work = function(args)
+{
+	var deferred = $.Deferred(function(dfd){
+		if(window.Worker){
+			var worker = new Worker(args.file);
+			worker.onmessage = function(event){
+				dfd.resolve(event.data);
+			};
+			worker.onerror = function(event){
+				dfd.reject(event);
+			};
+			worker.postMessage(args.args);
+		}
+	});
+	return deferred.promise();
+};
+
+$.fn.center = function()
+{
+	var w = $(window);
+	this.css({
+		'position':'absolute',
+		'top':Math.abs(((w.height() - this.outerHeight()) / 2) + w.scrollTop()),
+		'left':Math.abs(((w.width() - this.outerWidth()) / 2) + w.scrollLeft())
+	});
+	return this;
+};
+
+$.fn.loaderShow = function()
+{
+	$('.nc-main').css({'opacity':0.3});
+	return this.center().show();
+}
+
+$.fn.loaderHide = function()
+{
+	$('.nc-main').css({'opacity':1});
+	return this.hide();
+}
+
+$(function(){
+	$(document).on('contextmenu copy cut',function(e){
+		return false;
+	});
+});
+
+var api = {
+        uid:null,
+        model:null,
+        apikey:null,
+        token:{},
+        documentRoot:null,
+	defaultPage:1,	/* ページ分割しない場合:0, する場合:1 */
+        _model:function()
+        {
+//            return "/h/" + this.uid + "/cgi-bin/" + this.model;
+            return this.model;
+        },
+        _zoom:1.0,
+        fitText:function(zoom)
+        {
+            if( zoom ){
+                api._zoom = zoom;
+            }
+            $(".fit-text").fitText( api._zoom );
+//$(window).trigger('refreshDMM');
+            return false;
+        },
+        toPx:function(em) {
+            var px = $('.fit-text').css('font-size').replace('px','');
+            return px * em;
+        },
+	loader_object:function(){ return $('.nc-loader'); },
+        deferred:null,
+        notfound:function(jq_img)
+        {
+            jq_img.attr("src","/images/00/notfound.png")
+                  .addClass('nc-notfound-img')
+                  .next('.nc-notfound')
+                  .show();
+            return false;
+        },
+        notify:function( message, isStickey ){
+	    var d = new $.Deferred();
+            ios.notify({ title: 'INFORMATION(お知らせ)', message:message, sticky:isStickey, click:function(){$(this).fadeOut(500);} })
+            .then(function(){
+	        return d.resolve();
+	    });
+            return d.promise();
+        },
+	jqXHROnError:function(jqXHR){
+	    //jqXHR:statusText, responseText, status
+	    var isReload = false;
+	    var message;
+	    if( this.loader_object() )
+	        this.loader_object().loaderHide();
+	    if(! jqXHR ){
+		message = '想定外のエラーが発生しました。';
+	    }else{
+//console.log(jqXHR);
+		//エラーメッセージ
+		switch( jqXHR.status )
+		{
+		case 0:
+			if( jqXHR.statusText == 'timeout' ){
+				message = '一定時間内に応答がなかったため、接続を切断しました。';
+			}
+			break;
+		case 200:
+		case 406:
+			//http(200)でエラーが発生する場合
+			//jsonではなくWebサーバ側のエラーHTMLが返ってきたため。よってブラウザの再リロードでエラー画面を再表示する
+//console.log(jqXHR);
+			message = 'エラーが発生しました。お手数ですが一度トップページに戻ってからご覧ください。';
+			break;
+		case 404:
+			message = 'ページが見つかりません。Wi-Fiご利用中の場合は接続が切断された可能性があります。';
+			break
+		case 503:
+			message = jqXHR.statusText;
+			break;
+		default:
+			message = jqXHR.statusText + '(' + jqXHR.status + ')';
+			break;
+		}
+	    }
+	    this.notify( message )
+	    .then(function(){
+	        if( isReload && api.documentRoot ){
+                    location.href = api.documentRoot+'/';
+                }
+	    });
+	    return false;
+	},
+        scrollTop:function()
+        {
+            var d = new $.Deferred();
+            if(! $(window).scrollTop() ){
+                return d.resolve();
+            }
+            d.notify();
+            $('html, body').velocity("scroll",300,function(){return d.resolve()});
+            return d.promise();
+        } 
+};
+/* 機種一覧リスト動的生成 */
+var api03 = {
+	_cd_ps:'',
+	_bai:'',
+	_YMD_biz:'',
+	_page:api.defaultPage,
+        _autoDisplay:true, /* true:自動展開, false:手動展開 */
+        _timer:0,
+_loaded:0,
+        initialize:function(){
+            $('#ulKIm').on('click',this._clickEvent);
+
+$('#ulKI').on('click','li a',function(e){
+  var x = api03.get_replaceState();
+  api03.replaceState(x.loaded);
+});
+
+        },
+
+replaceState:function($loaded){
+  //var v = $loaded + ';'+$(window).scrollTop();
+  var v = $loaded + ';'+window.pageYOffset;
+  history.replaceState(null,null,'#'+v);
+},
+get_replaceState:function(){
+  var x = location.hash.substr(1);
+  w = x.split(';');
+  var r = {};
+  if(w){
+    x = {'loaded':w[0],'position':w[1]};
+  }
+  return x;
+},
+
+        _clickEvent:function(){
+            api03._page++;
+//history.replaceState(null,null,'#'+api03._page);
+api03.replaceState(api03._page);
+            api03.show( api03._cd_ps, api03._bai, api03._YMD_biz );
+        },
+        _inviewEvent:function(event,isInView,visibleX,visibleY){
+            /* inviwイベントが発火してからn秒後に読み込み開始 */
+            //if( isInView && (visibleY=='both' || visibleY=='bottom') ){
+if( isInView ){
+                api03._timer = setTimeout(function(){
+                    /* listに設定したイベントを破棄し、繰り返しイベントが発火しないようにする */
+                    $(this).off('inview');
+                    /* リストの末尾に到達した場合は次ページを表示する */
+                    api03._clickEvent();
+                },500);
+            }else{
+                /* inview発火条件が解除された場合 */
+                /* 読み込みがキャンセルされたと判断しタイマーを無効化 */
+                clearTimeout(api03._timer);
+            }
+        },
+	show:function(cd_ps,bai,YMD_biz)
+	{
+		var self = this;
+		self._cd_ps   = cd_ps;
+		self._bai     = bai;
+		self._YMD_biz = YMD_biz;
+var v = self.get_replaceState();
+
+		var ajax = function(){
+			api.deferred = new $.Deferred();
+			api.deferred.notify();
+			$.ajax({
+				url:api._model(),
+				data:{
+					cd_ps:self._cd_ps,
+					bai:self._bai,
+					YMD_biz:self._YMD_biz,
+                                        apikey:api.key,
+                                        _i:api.token._i,
+                                        _t:api.token._t,
+					page:self._page,
+loaded:v['loaded'],
+				},
+				dataType:'json'
+			}).done(function(data, status, jqXHR){
+if(! data.count)
+  api.deferred.reject(jqXHR, '機種がありません');
+				return self.render(data);
+			}).fail(function(jqXHR, statusText){
+				api.deferred.reject(jqXHR, statusText);
+			}).always(function(){
+				api.fitText();
+///                                $(window).trigger('refreshDMM');
+			});
+			return api.deferred.promise();
+		};
+		var target = $('#ulKI');
+                return ajax().progress(function(){
+api.loader_object().loaderShow();
+
+			/* 初回はリストを生成し終わるまでは非表示 */
+			/* 2ページ目以降はリストを追加する動作となるため、リストは表示したままとする */
+/*
+			if( self._page < 2 ){
+				target.hide();
+			}
+*/
+		}).then(function(){
+api.loader_object().loaderHide();
+			/* 初回はリストはリスト完成時も非表示のままなのでフェードインで表示させる */
+			/* 2ページ目以降は表示中であるため何もしない */
+			if( self._page < 2 ){
+				target.fadeIn(1000);
+			}
+                }).fail(function(jqXHR,statusText){
+//console.log(statusText);
+                  if(jqXHR && jqXHR.responseText){
+api.jqXHROnError(jqXHR);
+                  }
+		}).always(function(){
+api.loader_object().loaderHide();
+                });
+	},
+	render:function(json)
+	{
+		var self = this;
+                $("#spanPS").html(json.PS);
+
+                if(json.page) self._page = json.page;
+
+                /* 次ページ処理を一旦無効化 */
+                $("#ulKI li:last-child").off('inview');
+                $("#ulKIm").hide();
+
+                /* 機種一覧データ追加表示 */
+                $("#ulKI").append( $( $("#TmplKI").render(json) ).fadeIn(1000) );
+
+//機種一覧に追加が完了したかを監視し、追加完了時にスクロール移動する
+var x = api03.get_replaceState();
+if( x && x.position ){
+  var t = setInterval(function(){
+    if( $("#ulKI").height() ){
+      clearInterval(t);
+      $(window).scrollTop(x.position);
+    }
+  },300);
+}
+
+		/* 1ページしかない場合はロード時に起動した限りでよい */
+		/* 最終ページの場合もイベントを起動する必要はない */
+		if( json.page < json.pageMax && json.pageMax > 1 ){
+                    //自動展開機能が有効な場合
+                    if( self._autoDisplay ){
+                        $("#ulKI li:last-child").on('inview',self._inviewEvent);
+                    }else{
+                        $("#ulKIm").show();
+                    }
+		}
+		return api.deferred.resolve();
+	}
+};
+
+/* 台番一覧の動的生成 */
+var api05 = {
+	showParam:function( param )
+	{
+		var self = this;
+		var ajax = function(){
+			api.deferred = new $.Deferred();
+			api.deferred.notify();
+                        param.apikey = api.apikey,
+                        param._i = api.token._i,
+                        param._t = api.token._t,
+			$.ajax({
+				url:api._model(),
+				data:param,
+				dataType:'json'
+			}).done(function(data, status, jqXHR){
+				return self.render(data);
+                	}).fail(function(jqXHR, statusText){
+				api.deferred.reject(jqXHR, statusText);
+			}).always(function(){
+				api.fitText();
+			});
+			return api.deferred.promise();
+                };
+		target = $('.nc-main');
+		return ajax().progress(function(){
+api.loader_object().loaderShow();
+			target.hide();
+		}).then(function(){
+api.loader_object().loaderHide();
+			target.velocity("fadeIn",1000);
+		}).fail(function(jqXHR){
+api.jqXHROnError(jqXHR);
+		});
+	},
+	show:function(cd_kisyu,bai,YMD_biz)
+	{
+		return this.showParam( {'cd_kisyu':cd_kisyu,'bai':bai,'YMD_biz':YMD_biz} );
+	},
+	render:function(json)
+	{
+		var self = this;
+                document.title = json.Location.title;
+		$("#spanPS").html( $("#TmplPS").render(json.Ki) );
+		$("#divKI").html( $("#TmplKI").render(json.Ki) );
+		switch(json.Ki.fg_new){
+		case 1:
+			$("#divKI div").addClass("nc-shindai");
+			break;
+                case 2:
+                        $("#divKI div").addClass("nc-zodai");
+                        break;
+		}
+///console.log(json);
+                /* 速報データ */
+                /* tblDAb:legacy, tblDAbv2:new */
+                if( $("#tblDAbv2").get(0) ){
+                    $("#tblDAbv2").empty().append( $("#TmplDA").render(json) );
+                }else{
+                    $("#tblDAb").empty().append( $("#TmplDA").render(json.Dai) );
+                }
+
+		return api.deferred.resolve();
+	}
+};
+
+/* 台別ページの動的生成 */
+var api06 =
+{
+	_cd_dai:'',
+	_YMD_biz:'',
+	_page:api.defaultPage,	/* 現在のページ番号 */
+        _settings:'', 
+	php_v05:'nc-v05-001.php',
+	show:function(cd_dai,YMD_biz,isLoadFirst)
+	{
+		var self = this;
+		self._cd_dai  = cd_dai;
+		self._YMD_biz = YMD_biz;
+
+		var ajax = function()
+		{
+			api.deferred = new $.Deferred();
+			api.deferred.notify();
+			$.ajax({
+				url:api._model(),
+				data:{
+					cd_dai:self._cd_dai,
+					YMD_biz:self._YMD_biz,
+                                        apikey:api.apikey,
+                                        _i:api.token._i,
+                                        _t:api.token._t,
+					page:self._page,
+				},
+				dataType:'json'
+			}).done(function(data, status, jqXHR){
+if(data && data.redirect_captcha){
+  location.href = data.redirect_captcha;
+  return;
+}
+
+
+				if( data.page < 2 ){
+                                        /* 初回（ページ=0 or 1）は全更新 */
+                                        return self.render(data);
+				}else{
+                                        /* 2ページ目以降 特賞履歴のみ更新 */
+                                        return self.renderHist(data);
+				}
+			}).fail(function(jqXHR, statusText){
+				api.deferred.reject(jqXHR, statusText);
+			}).always(function(){
+				api.fitText();
+			});
+			return api.deferred.promise();
+		};
+		target = $('.nc-swipe');
+
+		if( isLoadFirst ){
+			return ajax().progress(function(){
+api.loader_object().loaderShow();
+				target.hide();
+			}).then(function(){
+api.loader_object().loaderHide();
+				target.velocity("fadeIn",1000,function(){
+                                    api06.refresh();
+                                });
+			}).fail(function(jqXHR, statusText){
+api.jqXHROnError(jqXHR);
+			});
+		}else{
+			return ajax();
+		}
+	},
+	leftTorightStart:function(target)
+	{
+		var d = new $.Deferred;
+		target.velocity({'left':"20%","opacity":0},300,function(){
+			target.css({"left":"-20%"});
+			d.resolve();
+		});
+		return d.promise();
+	},
+	leftTorightEnd:function(target)
+	{
+		var d = new $.Deferred;
+		target.velocity({'left':0, "opacity":1},900,function(){
+			d.resolve();
+		});
+		return d.promise();
+	},
+        leftTorightCancel:function(target)
+        {
+                var d = new $.Deferred;
+                target.css({"left":"20%","opacity":0});
+                target.velocity({'left':0, "opacity":1},900,function(){
+                        d.resolve();
+                });
+                return d.promise();
+        },
+	rightToleftStart:function(target)
+	{
+		var d = new $.Deferred;
+		target.velocity({'left':"-20%", "opacity":0},300,function(){
+			target.css({"left":"20%"});
+			d.resolve();
+		});
+                return d.promise();
+	},
+	rightToleftEnd:function(target)
+	{
+                var d = new $.Deferred;
+                target.velocity({'left':0, "opacity":1},900,function(){
+                        d.resolve();
+                });
+                return d.promise();
+	},
+        rightToleftCancel:function(target)
+        {
+                var d = new $.Deferred;
+                target.css({"left":"-20%","opacity":0});
+                target.velocity({'left':0, "opacity":1},900,function(){
+                        d.resolve();
+                });
+                return d.promise();
+        },
+        _location:function(url){
+            var parser = location;
+            var ma = url.match(/\?([^\?]*)/);
+            search=parser.search;
+            if(ma) search='?' + RegExp.$1;
+            return {
+                protocol: parser.protocol,
+                host: parser.host,
+                hostname: parser.hostname,
+                port: parser.port,
+                pathname: parser.pathname,
+                search: search,
+                hash: parser.hash
+            };
+        },
+        /* ページ自体の描画発生時のみ呼ぶ */
+        refresh:function()
+        {
+          $('#divCHART').trigger('refresh');
+          $('#SVG-CHART7').trigger('refresh');
+///          $(window).trigger('refreshDMM');
+        },
+	/* ページ全更新 */
+	render:function(json)
+	{
+		var self = this;
+		var target = $('.nc-swipe');
+
+		/* ウィンドウタイトル名 */
+                document.title = json.Location.title;
+
+		/* 前画面に戻るリンク生成  */
+		/* 今のところYMD_bizは隠す */
+		var param = {
+                    cd_kisyu:json.Ki.cd_kisyu
+                   ,bai:json.Ki.bai
+                   ,nmk_kisyu:encodeURIComponent(json.Ki.name)
+                };
+		$("#php_v05").attr('href', this.php_v05 + '?' + $.param(param) );
+
+		/* 台番号 */
+		$("#divDAI").empty().append( $("#TmplDAI").render(json.Dai) );
+
+$("body").triggerHandler('render',json);
+
+
+		//http://tacamy.hatenablog.com/entry/2013/03/03/213113
+		/* 前台クリック時イベント設定 */
+		$("#dai_prev").on('click', function(e){
+///$(window).trigger('DMMTop');
+self._page = api.defaultPage;	/* 現在のページ番号をリセット */
+			api.scrollTop().then(function(){
+api.loader_object().loaderShow();
+				return self.leftTorightStart(target);
+			}).then(function(){
+				return self.show(json.Dai.cd_dai_prev, json.YMD_biz);
+                        }).then(function(){
+api.loader_object().loaderHide();
+                                return self.leftTorightEnd(target);
+
+                        }).done(function(){
+                        	api06.refresh();
+			}).fail(function(jqXHR, statusText){
+api.jqXHROnError(jqXHR);
+self.leftTorightCancel(target);
+			});
+			return false;
+		});
+
+		/* 次台クリック時イベント設定 */
+		$("#dai_next").on('click', function(){
+///$(window).trigger('DMMTop');
+self._page = api.defaultPage; /* 現在のページ番号をリセット */
+			api.scrollTop().then(function(){
+api.loader_object().loaderShow();
+				return self.rightToleftStart(target);
+			}).then(function(){
+				return self.show(json.Dai.cd_dai_next, json.YMD_biz);
+			}).then(function(){
+api.loader_object().loaderHide();
+				return self.rightToleftEnd(target);
+                        }).done(function(){
+                        	api06.refresh();
+			}).fail(function(jqXHR, statusText){
+api.jqXHROnError(jqXHR);
+self.rightToleftCancel(target);
+			});
+			return false;
+		});
+
+		/* 最終更新日時 */
+		$("#upYMDhms").html( $("#TmplUpYMDhms").render(json.up_YMDhms) );
+
+		/* PSラベル */
+                $("#spanPS").html( $("#TmplPS").render(json.Ki) );
+
+		/* 機種名 */
+		$("#divKI").html( $("#TmplKI").render(json.Ki) );
+		switch(json.Ki.fg_new)
+		{
+		case 1:	/* 新台マーク */
+			$("#divKI div").addClass("nc-shindai");
+			break;
+                case 2:	/* 増台マーク */
+                        $("#divKI div").addClass("nc-zodai");
+                        break;
+		}
+
+		/* 速報データ */
+                /* tblDAb:legacy, tblDAbv2:new */
+                if( $("#tblDAbv2").get(0) ){
+                    $("#tblDAbv2").empty().append( $("#TmplDA").render(json) );
+                }else{
+                    $("#tblDAb").empty().append( $("#TmplDA").render(json.Data) );
+                }
+//console.log(json);
+		/* スランプグラフ */
+		if (json.GraphType == 'svg') {
+///////			$("#divCHART").empty().append( $("#TmplSVGCHART").render(json.Graph) );
+if( $("#TmplSVGCHART_WL").get(0) ){
+$("#divCHART").empty().append( $("#TmplSVGCHART_WL").render(json) );
+}else{
+$("#divCHART").empty().append( $("#TmplSVGCHART").render(json.Graph) );
+}
+
+			// イベント発生時にグラフを描画
+			self.renderCharts(json.Graph);
+
+                } else {
+			$("#divCHART").empty().append( $("#TmplCHART").render(json.Graph) );
+                        $("#divCHART img").off('error').on('error',function(){
+                            self._showNoData( $(this).parent() );
+                        });
+		}
+
+		/* 特賞履歴 */
+if($("#TmplSVGCHART_WL").get(0) && json.Hists){
+		self.renderHistMulti( json.Hists[0] );
+}else{
+		self.renderHist( json );
+}
+
+/* 連続グラフ */
+try{
+  $('#SVG-CHART7').AmChart7({cd_dai:self._cd_dai,YMD_biz:self._YMD_biz,apikey:api.apikey,_i:api.token._i,_t:api.token._t}).trigger('measure');
+}catch(e){
+  ;
+}
+
+/* 特賞履歴ツブ */
+try{
+  $('#Toku7').Toku7({cd_dai:self._cd_dai,YMD_biz:self._YMD_biz,apikey:api.apikey,_i:api.token._i,_t:api.token._t}).show();
+}catch(e){
+  ;
+}
+
+		return api.deferred.resolve();
+	},
+        /* データがありません表示 */
+        _showNoData:function(container,text){
+            var img = container.find('img');
+            api.notfound( img );
+            container.find('.nc-legend').hide();
+            if(text) container.find('.nc-notfound').text(text);
+            return false;
+        },
+        renderCharts: function(graphDatas) {
+                var self = this;
+                //チャートエリア表示イベント伝播
+                var area =  $('#divCHART');
+                area.off('refresh').on('refresh',function(){
+                    area.find('.nc-svg-transmit-panel').each(function(index){
+                        var svg = $(this);
+                        setTimeout(function(){
+                            svg.trigger('show');
+                        },index*100);
+                    });
+//                    return false;
+                });
+                //各チャート毎のイベント
+		$.each(graphDatas, function(i, value) {
+                        var svg = $('#' + value.id);
+                        var root = svg.parent().parent();
+                        var container = root.find('.nc-notfound-panel');
+root.find('.nc-data-panel').css({visibility:"hidden"});
+                        self._showNoData(container,'ロード中');
+                        var isError = false;
+                        if(! value.src){
+                            isError = true;
+                        }
+                        if(! value.src.datas){
+                            isError = true;
+                        }
+                        if(! value.src.datas.length){
+                            isError = true;
+                        }
+                        if(isError){
+                            self._showNoData(container,'データはありません。');
+                            return true;
+                        }
+
+                        var scrollNecessity = value.src.scrollbar;
+
+                       	svg.off('show').on('show', function(){
+                            var ro = svg.parent().parent();
+                            var conA = ro.find('.nc-data-panel');
+                            var conB = ro.find('.nc-notfound-panel');
+                            conB.parent().removeClass('nc-relative').addClass('nc-absolute');
+
+                            svg.trigger('invalidate');
+
+                            //凡例
+                            legend = conA.find('.nc-legend');
+                            if(scrollNecessity){
+                                legend.removeClass('nc-svglegend-1').addClass('nc-svglegend-2');
+                            }else{
+                                legend.removeClass('nc-svglegend-2').addClass('nc-svglegend-1');
+                            }
+                            legend.show();
+
+                            if (scrollNecessity) {
+                                //透過パネル削除してタップ動作を有効化
+                                svg.removeClass('nc-svg-transmit-panel');
+                                svg.on('movestart', function(e){ e.stopPropagation(); });
+                                svg.on('moveend', function(e){ e.stopPropagation(); });
+                                svg.on('swipeleft', function(e){ e.stopPropagation(); });
+                                svg.on('swiperight', function(e){ e.stopPropagation(); });
+                            }
+
+                            conA.css({visibility:"visible"}).hide();
+                            conB.velocity("fadeOut",500,function(){ $(this).hide(); });
+                            conA.show();
+                            return false;
+                        });
+
+                        //グラフ再計算及び再描画
+                        svg.off('invalidate').on('invalidate',function(){
+                            if (value.type) {
+                                (scrollNecessity) ? api06.renderOutBasedChart(value) :
+                                                    api06.renderOutBasedChartXY(value);
+                            } else {
+                                api06.renderTimeBasedChart(value);
+                            }
+                            return false;
+                        });
+
+                        //ウィンドウのリサイズ時
+                        var timer;
+                        $(window).resize(function(e){
+                            e.preventDefault();
+                            if(timer) clearTimeout(timer);
+                            timer = setTimeout(function(){
+                                svg.empty().trigger('invalidate');
+                            },200);
+                            return false;
+                        });
+		});
+	},
+
+        renderTimeBasedChart: function(graphData) {
+            var scrollNecessity = graphData.src.scrollbar;
+            var maxFontSize = 20;
+            AmCharts.theme = AmCharts.themes.pscube;
+            AmCharts.useUTC = false;
+
+            var chart = new AmCharts.AmSerialChart();
+            chart.pathToImages = '/js/amcharts/images/';
+            chart.zoomOutText = '';
+            chart.addClassNames = true;
+            chart.classNamePrefix = 'amcharts';
+            chart.fontFamily = 'monospace';
+            chart.fontSize = Math.min(api.toPx(0.75), maxFontSize);
+            chart.categoryField = 'date';
+            chart.categoryAxis.minPeriod = 'mm';
+            chart.categoryAxis.boldPeriodBeginning = false;
+            chart.categoryAxis.parseDates = true;
+//chart.categoryAxis.position = 'top';
+
+            if (graphData.src.xLabelVisibility == false){
+                chart.categoryAxis.labelsEnabled=false;
+            }
+
+            if (graphData.src.xGridVisibility == false) {
+                chart.categoryAxis.gridAlpha = 0;
+            }
+
+            chart.categoryAxis.labelFunction = function(valueText, value, categoryAxis) {
+                return AmCharts.formatDate(value, "JJ:NN");
+            };
+            chart.categoryAxis.fontSize = Math.min(api.toPx(0.75), maxFontSize);
+            chart.dataProvider = graphData.src.datas;
+
+            var valueAxis = new AmCharts.ValueAxis();
+            valueAxis.id = "v1";
+            valueAxis.position = "left";
+            valueAxis.precision = 0;
+            if (graphData.src.yLabelVisibility == false) {
+                valueAxis.labelsEnabled = false;
+            }
+            if (graphData.src.yGridVisibility == false) {
+                valueAxis.gridAlpha = 0;
+            }
+            if (graphData.src.maximumValue) {
+                valueAxis.maximum = graphData.src.maximumValue;
+            }
+            if (graphData.src.minimumValue) {
+                valueAxis.minimum = graphData.src.minimumValue;
+            }
+            valueAxis.labelFunction = function(value, valueText, valueAxis) {
+                while (valueText.length < 7) {
+                    valueText = '\u00a0' + valueText;
+                }
+                return valueText;
+            }
+            valueAxis.fontSize = Math.min(api.toPx(0.75), maxFontSize);
+            chart.addValueAxis(valueAxis);
+
+            var graph = new AmCharts.AmGraph();
+	    graph.id = "g1";
+            if (graphData.src.lineType == 1) {
+                graph.type = 'smoothedLine';
+            }
+            graph.bullet = "circle";
+            graph.bulletAlpha = 0;
+            graph.balloonFunction = function(item) {
+                return item.values.value;
+            };
+graph.showBalloon = false;
+            graph.valueField = "value";
+            graph.lineColorField = "lineColor";
+            graph.classNameField = "className";
+
+graph.lineThickness = 2;
+if(graphData.src.lineThickness) {
+  graph.lineThickness = graphData.src.lineThickness;
+}
+
+            chart.addGraph(graph);
+
+            var cursor = new AmCharts.ChartCursor();
+            cursor.cursorPosition = "middle";
+            cursor.pan = true;
+            cursor.valueLineEnabled = true;
+
+            cursor.valueLineBalloonEnabled = false;
+            cursor.categoryBalloonEnabled = false;
+            cursor.categoryBalloonFunction = function(value) {
+                return AmCharts.formatDate(value, "JJ:NN");
+            };
+            chart.addChartCursor(cursor);
+
+            if (scrollNecessity) {
+                var scrollbar = new AmCharts.ChartScrollbar();
+     	        scrollbar.graph = "g1";
+                scrollbar.gridCount = graphData.src.scrollbar_gridCount;
+                scrollbar.resizeEnabled = false;
+                scrollbar.hideResizeGrips = true;
+                chart.addChartScrollbar(scrollbar);
+                valueAxis.position = "right";
+            }
+
+            chart.addListener('rendered', function() {
+                if (scrollNecessity) {
+                    var dtEnd = graphData.src.datas.pop().date;
+//データ表示期間
+var dtStart = dtEnd - 48*3600*1000;
+                    var startDate = new Date(dtStart);
+                    var endDate = new Date(dtEnd);
+                    chart.zoomToDates(startDate, endDate);
+                }
+            });
+
+            if (graphData.src.height) {
+                $('#' + graphData.id).css('height', graphData.src.height);
+            }
+
+            chart.write(graphData.id);
+        },
+
+        /* 現在は未使用 */
+        renderOutBasedChart: function(graphData){
+            var maxFontSize = 20;
+            AmCharts.theme = AmCharts.themes.pscube;
+            AmCharts.useUTC = false;
+
+            var chart = new AmCharts.AmSerialChart();
+            chart.pathToImages = '/js/amcharts/images/';
+            chart.zoomOutText = '';
+            chart.addClassNames = true;
+            chart.classNamePrefix = 'amcharts';
+            chart.fontFamily = 'monospace';
+            chart.fontSize = Math.min(api.toPx(0.75), maxFontSize);
+            chart.categoryField = 'out';
+            chart.categoryAxis.boldPeriodBeginning = false;
+            chart.categoryAxis.parseDates = false;
+//chart.categoryAxis.position = 'top';
+            if (graphData.src.xGridVisibility == false) {
+                chart.categoryAxis.gridAlpha = 0;
+            }
+            chart.categoryAxis.fontSize = Math.min(api.toPx(0.75), maxFontSize);
+            chart.dataProvider = graphData.src.datas;
+            var valueAxis = new AmCharts.ValueAxis();
+            valueAxis.id = "v1";
+            valueAxis.position = "left";
+            valueAxis.precision = 0;
+
+            if (graphData.src.yLabelVisibility == false) {
+                valueAxis.labelsEnabled = false;
+            }
+            if (graphData.src.yGridVisibility == false) {
+                valueAxis.gridAlpha = 0;
+            }
+            if (graphData.src.maximumValue) {
+                valueAxis.maximum = graphData.src.maximumValue;
+            }
+            if (graphData.src.minimumValue) {
+                valueAxis.minimum = graphData.src.minimumValue;
+            }
+            valueAxis.labelFunction = function(value, valueText, valueAxis) {
+                while (valueText.length < 7) {
+                    valueText = '\u00a0' + valueText;
+                }
+                return valueText;
+            }
+            valueAxis.fontSize = Math.min(api.toPx(0.75), maxFontSize);
+            chart.addValueAxis(valueAxis);
+
+            var graph = new AmCharts.AmGraph();
+            graph.id = "g1";
+            if (graphData.src.lineType == 1) {
+                graph.type = 'smoothedLine';
+            }
+            graph.bullet = "circle";
+            graph.bulletAlpha = 0;
+graph.showBalloon = false;
+            graph.valueField = "value";
+            graph.lineColorField = "lineColor";
+            graph.classNameField = "className";
+            chart.addGraph(graph);
+
+            var cursor = new AmCharts.ChartCursor();
+            cursor.cursorPosition = "middle";
+            cursor.pan = true;
+            cursor.valueLineEnabled = true;
+            cursor.valueLineBalloonEnabled = false;
+            cursor.categoryBalloonEnabled = false;
+            chart.addChartCursor(cursor);
+
+            var scrollbar = new AmCharts.ChartScrollbar();
+            scrollbar.graph = "g1";
+            scrollbar.gridCount = 0;
+            scrollbar.resizeEnabled = false;
+            scrollbar.hideResizeGrips = true;
+            chart.addChartScrollbar(scrollbar);
+            valueAxis.position = "left";
+
+            var responsive = function() {
+                var fontSize = Math.min(api.toPx(0.75), maxFontSize);
+                chart.fontSize = fontSize;
+                chart.categoryAxis.fontSize = fontSize;
+                $.each(chart.valueAxes, function(i, value) {
+                    value.fontSize = fontSize;
+                });
+                $.each(chart.graphs, function(i ,value) {
+                    value.lineThickness = Math.min(api.toPx(0.2), 2);
+                });
+                chart.chartScrollbar.scrollbarHeight = api.toPx(3);
+                chart.chartScrollbar.categoryAxis.labelFunction = function(text, value) {
+                    return AmCharts.formatDate(value, "MM/DD");
+                };
+                chart.chartScrollbar.categoryAxis.fontSize = api.toPx(0.6);
+            }
+
+            chart.addListener('rendered', function() {
+                var d = chart.chartData;
+                chart.zoomToIndexes(d.length-100, d.length-1);
+            });
+
+            if (graphData.src.height) {
+                $('#' + graphData.id).css('height', graphData.src.height);
+            }
+
+            chart.write(graphData.id);
+        },
+
+        renderOutBasedChartXY: function(graphData) {
+            var maxFontSize = 20;
+
+            AmCharts.theme = AmCharts.themes.pscube;
+
+            var chart = new AmCharts.AmXYChart();
+            chart.pathToImages = '/js/amcharts/images/';
+            chart.zoomOutText = '';
+            chart.addClassNames = true;
+            chart.classNamePrefix = 'amcharts';
+            chart.fontFamily = 'monospace';
+            chart.fontSize = Math.min(api.toPx(0.75), maxFontSize);
+            chart.dataProvider = graphData.src.datas;
+
+            var xAxis = new AmCharts.ValueAxis();
+            xAxis.position = "bottom";
+            xAxis.precision = 0;
+            xAxis.showLastLabel = false;
+            if (graphData.src.xLabelVisibility == false) {
+                xAxis.labelsEnabled = false;
+            }
+            if (graphData.src.xGridVisibility == false) {
+                xAxis.gridAlpha = 0;
+            }
+            if (graphData.src.maximumOut) {
+                xAxis.maximum = graphData.src.maximumOut;
+            }
+            xAxis.labelFunction = function(value, valueText, valueAxis) {
+                return valueText;
+            }          
+            xAxis.fontSize = Math.min(api.toPx(0.75), maxFontSize);
+            chart.addValueAxis(xAxis);
+
+            var yAxis = new AmCharts.ValueAxis();
+            yAxis.position = "left";
+            yAxis.precision = 0;
+            if (graphData.src.yLabelVisibility == false) {
+                yAxis.labelsEnabled = false;
+            }
+            if (graphData.src.yGridVisibility == false) {
+                yAxis.gridAlpha = 0;
+            }
+            if (graphData.src.maximumValue) {
+                yAxis.maximum = graphData.src.maximumValue;
+            }
+            if (graphData.src.minimumValue) {
+                yAxis.minimum = graphData.src.minimumValue;
+            }
+            yAxis.labelFunction = function(value, valueText, valueAxis) {
+                while (valueText.length < 7) {
+                    valueText = '\u00a0' + valueText;
+                }
+                return valueText;
+            }          
+            yAxis.fontSize = Math.min(api.toPx(0.75), maxFontSize);
+            chart.addValueAxis(yAxis);
+
+            var graph = new AmCharts.AmGraph();
+	    graph.id = "g1";
+            graph.bullet = "circle";
+            graph.bulletAlpha = 0;
+            graph.balloonText = '[[y]]';
+            graph.lineColor = graphData.src.color;
+
+            graph.lineThickness = 2;
+if(graphData.src.lineThickness) {
+  graph.lineThickness = graphData.src.lineThickness;
+}
+
+            graph.xField = "out";
+            graph.yField = "value";
+            graph.classNameField = "className";
+            chart.addGraph(graph);
+
+            var cursor = new AmCharts.ChartCursor();
+            cursor.cursorPosition = "middle";
+            cursor.zoomable = false;
+            chart.addChartCursor(cursor);
+
+            if (graphData.src.height) {
+                $('#' + graphData.id).css('height', graphData.src.height);
+            }
+
+            chart.write(graphData.id);
+        },
+
+
+	/* 特賞履歴のみ更新 */
+	renderHist:function(json){
+		var self = this;
+		var tbl  = $("#tblHISTb");
+
+		/* 特賞履歴初期化 */
+		if( json.page < 2 ){
+			$("#tblHISTb").empty();
+		}
+console.log(json);
+		if( json.HistCount < 1 ){
+			/* レコードが存在しない場合 */
+			/* 表を消してエラーメッセージを表示する */
+			api.notfound( $("#tblHISTh img") );
+			$("#tblHIST").hide();
+			$("#tblHISTh").show();
+		}else{
+			/* レコードが存在する場合 */
+			/* 表示を表示してエラーメッセージを非表示にする */
+			$("#tblHIST").show();
+			$("#tblHISTh").hide();
+			/* 追加分レコードが存在する場合 */
+			if( json.Hist.length ){
+				tbl.append(
+                                    $( $("#TmplHIST").render(json.Hist) )
+                                    .fadeIn(1000)
+                                );
+			}
+		}
+
+		/* 追加読み込み用のボタン制御 */
+		$("#tblHISTm").off('click');
+		if( json.page < json.pageMax && json.pageMax > 1 ){
+			$("#tblHISTm")
+			.on('click', function(){
+				self._page = json.page + 1;
+				self.show(self._cd_dai, self._YMD_biz,false)
+				.progress(function(){
+api.loader_object().loaderShow();
+				})
+				.then(function(){
+api.loader_object().loaderHide();
+/* ページの高さが変わるのでDMM向けに高さ変更の通知 */
+///$(window).trigger('refreshDMM');
+				});
+			})
+			.show();
+		}else{
+			$("#tblHISTm").hide();
+		}
+                return api.deferred.resolve();
+	},
+
+        /* 特賞履歴のみ更新 */
+        renderHistMulti:function(json){
+                var self = this;
+                var tbl  = $("#tblHISTb");
+                var tbl_tr = $("#tblHISTb tr");
+
+                /* 特賞履歴初期化 */
+                $("#tblHISTb").empty();
+                $("#tblHISTm").hide();
+//console.log(json.Hist);
+                try{
+                  if( json.Hist.length < 1 ){
+                      /* レコードが存在しない場合 */
+                      /* 表を消してエラーメッセージを表示する */
+                      api.notfound( $("#tblHISTh img") );
+                      $("#tblHIST").hide();
+                      $("#tblHISTh").show();
+                      return;
+                  }
+                }catch(e){
+                    return;
+                }
+
+                /* レコードが存在する場合 */
+                /* 表示を表示してエラーメッセージを非表示にする */
+                $("#tblHIST").show();
+                $("#tblHISTh").hide();
+
+                tbl.append(
+                    //$( $("#TmplHIST").render(json) )
+                    $( $("#TmplHIST_WL").render(json,{json_encode:function(val){return JSON.stringify(val)}}) )
+                );
+
+                if($("#tblHISTb tr.hide").length){
+                  $("#tblHISTm").show();
+                }
+
+                $("#tblHISTm").off('click').on('click',function(){
+                  $("#tblHISTb tr.hide").each((index,val)=>{
+                    if(index > json.limit) return;
+                    $(val).removeClass('hide').addClass('show');
+                  });
+
+                  //全て表示したらmoreボタンをOFF
+                  if($("#tblHISTb tr.hide").length){
+                    $("#tblHISTm").show();
+                  }else{
+                    $("#tblHISTm").hide();
+                  }
+                });
+
+
+
+
+        }
+
+};

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>スロット分析＆予測レポート</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff4757;
+            --secondary: #2f3542;
+            --bg: #1e272e;
+            --text: #f1f2f6;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --gold: #ffa502;
+            --neon-blue: #00d2d3;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #1e272e 0%, #2f3542 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 2rem; animation: fadeInDown 0.8s ease; }
+        h1 {
+            font-size: 2.5rem; font-weight: 900;
+            background: linear-gradient(to right, #ff4757, #ffa502);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        p.subtitle { color: #a4b0be; font-size: 1.1rem; }
+        
+        .date-banner {
+            background: rgba(0, 210, 211, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 15px rgba(0, 210, 211, 0.2);
+        }
+        
+        .tabs { display: flex; justify-content: center; margin-bottom: 2rem; gap: 1rem; }
+        .tab-btn {
+            background: var(--card-bg); color: var(--text);
+            border: 1px solid var(--border); border-radius: 30px;
+            padding: 0.8rem 2rem; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .tab-btn.active { background: linear-gradient(to right, #ff4757, #ff6b81); border-color: transparent; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4); }
+        .tab-content { display: none; animation: fadeInUp 0.5s ease; }
+        .tab-content.active { display: block; }
+        
+        .date-buttons-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 2rem; }
+        .date-btn {
+            background: rgba(255,255,255,0.05); color: #a4b0be;
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 0.8rem 1.5rem; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: 0.3s;
+        }
+        .date-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .date-btn.active { background: #ff4757; color: #fff; border-color: #ff4757; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4); }
+        
+        .summary-dashboard { display: none; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .summary-dashboard.active { display: grid; animation: fadeInUp 0.5s ease; }
+        .summary-card { background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; }
+        .summary-title { font-size: 0.9rem; color: #a4b0be; margin-bottom: 0.5rem; }
+        .summary-value { font-size: 1.5rem; font-weight: 900; color: #fff; }
+        
+        .table-container {
+            display: none; background: var(--card-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); overflow-x: auto;
+        }
+        .table-container.active { display: block; animation: fadeInUp 0.5s ease; }
+        table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+        th, td { padding: 1rem; border-bottom: 1px solid var(--border); }
+        th { font-weight: 600; color: #ff6b81; cursor: pointer; }
+        tr:hover { background: rgba(255, 255, 255, 0.1); transform: scale(1.01); transition: 0.2s; }
+        
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .badge-day { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
+        
+        .diff-positive { color: #2ed573; font-weight: 800; }
+        .diff-negative { color: #ff4757; font-weight: 800; }
+        .setting-good { color: #ff4757; font-weight: 800; }
+        .setting-ok { color: #ffa502; font-weight: 800; }
+        .setting-bad { color: #747d8c; font-weight: 400; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.5rem; }
+
+        .card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+            border: 1px solid var(--border); border-radius: 16px;
+            padding: 1.5rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(to right, #ff4757, #ffa502);
+        }
+        .card-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .card-score { color: var(--gold); font-size: 1.2rem; }
+        
+        .score-bar-bg { background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; margin-bottom: 1.2rem; overflow: hidden; }
+        .score-bar-fill { height: 100%; background: linear-gradient(to right, #ff4757, #ffa502); box-shadow: 0 0 10px rgba(255, 71, 87, 0.5); }
+
+        .card-tag { display: inline-block; background: rgba(255, 71, 87, 0.2); color: #ff6b81; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; margin-bottom: 1rem; }
+        
+        .period-stats { width: 100%; border-collapse: collapse; margin-top: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; }
+        .period-stats th, .period-stats td { padding: 0.5rem; text-align: center; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .period-stats th { background: rgba(255,255,255,0.05); color: #a4b0be; font-weight: 600; }
+        .period-stats tr:last-child td { border-bottom: none; }
+        
+        .prob-bar-container { width: 120px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; display: flex; overflow: hidden; margin-top: 4px; }
+        .prob-6 { background: #ff4757; }
+        .prob-5 { background: #ff6b81; }
+        .prob-4 { background: #ffa502; }
+        .prob-3 { background: #eccc68; }
+        .prob-2 { background: #7bed9f; }
+        .prob-1 { background: #747d8c; }
+        
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="margin-bottom: 1rem;">
+            <a href="../index.html" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; transition: background 0.3s; border: 1px solid rgba(255,255,255,0.2);" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                <span style="font-size: 1.2rem;">🏠</span> ポータルへ戻る
+            </a>
+        </div>
+        <header>
+            <h1>AI PREDICTION & ANALYSIS</h1>
+            <p class="subtitle">Sドラゴンハナハナ-閃光-SP-30 / サンシャイン糸満店 特化システム</p>
+        </header>
+        <div style="text-align: center;">
+            
+<div style="text-align: center; margin-bottom: 1.5rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; display: inline-block;">
+    <span style="color: #00d2d3; font-weight: bold; margin-right: 10px;">📅 表示中のデータ: </span>
+    <select onchange="window.location.href=this.value" style="padding: 8px 15px; border-radius: 5px; background: #2f3542; color: #fff; border: 1px solid #00d2d3; cursor: pointer; font-size: 1rem; font-weight: bold; outline: none;">
+        <option value="report.html" >2026-07-09 (最新)</option>
+<option value="report_2026-07-08.html" >2026-07-08</option>
+<option value="report_2026-07-07.html" >2026-07-07</option>
+<option value="report_2026-07-06.html" >2026-07-06</option>
+<option value="report_2026-07-05.html" >2026-07-05</option>
+<option value="report_2026-07-04.html" >2026-07-04</option>
+<option value="report_2026-07-03.html" selected>2026-07-03</option>
+<option value="report_2026-07-02.html" >2026-07-02</option>
+
+    </select>
+</div>
+
+        </div>
+
+        <div class="date-banner">
+            📅 明日 (2026-07-04) の営業日属性: 通常営業日
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn" onclick="switchTab('prediction')">🎯 明日の狙い目予測</button>
+            <button class="tab-btn active" onclick="switchTab('data')">📊 全データ解析</button>
+        </div>
+
+        <!-- 予測タブ -->
+        <div id="prediction" class="tab-content">
+            <h2 style="margin-bottom: 2rem; color: var(--gold);">🔥 AI推奨 狙い目ランキング（高稼働凹み・完全放置特化）</h2>
+            <div class="grid" id="predictionGrid"></div>
+        </div>
+
+        <!-- データタブ -->
+        <div id="data" class="tab-content active">
+            <div class="date-buttons-container" id="dateButtons"></div>
+            
+            <div class="summary-dashboard" id="dailySummary">
+                <div class="summary-card">
+                    <div class="summary-title">平均ゲーム数</div>
+                    <div class="summary-value" id="sumGames">0 G</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">平均差枚</div>
+                    <div class="summary-value" id="sumDiff" style="color: var(--gold);">+0 枚</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">全体BIG確率</div>
+                    <div class="summary-value" id="sumBig">1/0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">全体REG確率</div>
+                    <div class="summary-value" id="sumReg">1/0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">全体合算</div>
+                    <div class="summary-value" id="sumTotal">1/0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">ホール全体推測設定</div>
+                    <div class="summary-value" id="sumSetting" style="color: #ff4757;">設定?</div>
+                </div>
+            </div>
+
+            <div class="table-container" id="tableContainer">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('台番')">台番 ⇅</th>
+                            <th onclick="sortTable('累計ゲーム数')">G数 ⇅</th>
+                            <th onclick="sortTable('BIG回数')">BIG ⇅</th>
+                            <th onclick="sortTable('REG回数')">REG ⇅</th>
+                            <th onclick="sortTable('推測差枚')">推測差枚 ⇅</th>
+                            <th onclick="sortTable('REG確率')">REG確率 ⇅</th>
+                            <th onclick="sortTable('最有力設定')">最有力設定 ⇅</th>
+                            <th>ベイズ推定(設定割合%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [{"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "396", "累計ゲーム数": "5376", "BIG回数": "21", "REG回数": "8", "推測差枚": "-832", "REG確率": "672", "最有力設定": "設定1", "設定1(%)": "54.9", "設定2(%)": "22.3", "設定3(%)": "13.7", "設定4(%)": "6.4", "設定5(%)": "1.8", "設定6(%)": "0.8"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "397", "累計ゲーム数": "937", "BIG回数": "4", "REG回数": "1", "推測差枚": "-97", "REG確率": "937", "最有力設定": "設定1", "設定1(%)": "48.3", "設定2(%)": "20.6", "設定3(%)": "14.7", "設定4(%)": "9.0", "設定5(%)": "4.0", "設定6(%)": "3.4"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "398", "累計ゲーム数": "2361", "BIG回数": "7", "REG回数": "4", "推測差枚": "-878", "REG確率": "590", "最有力設定": "設定1", "設定1(%)": "52.6", "設定2(%)": "21.5", "設定3(%)": "13.9", "設定4(%)": "7.5", "設定5(%)": "2.7", "設定6(%)": "1.7"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "399", "累計ゲーム数": "8300", "BIG回数": "48", "REG回数": "18", "推測差枚": "3183", "REG確率": "461", "最有力設定": "設定6", "設定1(%)": "7.1", "設定2(%)": "8.7", "設定3(%)": "16.0", "設定4(%)": "22.3", "設定5(%)": "19.5", "設定6(%)": "26.4"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "400", "累計ゲーム数": "1223", "BIG回数": "5", "REG回数": "3", "推測差枚": "-19", "REG確率": "407", "最有力設定": "設定1", "設定1(%)": "41.3", "設定2(%)": "20.2", "設定3(%)": "16.2", "設定4(%)": "11.3", "設定5(%)": "5.7", "設定6(%)": "5.4"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "401", "累計ゲーム数": "146", "BIG回数": "0", "REG回数": "0", "推測差枚": "-187", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "47.9", "設定2(%)": "20.3", "設定3(%)": "14.5", "設定4(%)": "9.1", "設定5(%)": "4.3", "設定6(%)": "3.9"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "402", "累計ゲーム数": "8566", "BIG回数": "43", "REG回数": "18", "推測差枚": "1582", "REG確率": "475", "最有力設定": "設定3", "設定1(%)": "17.7", "設定2(%)": "16.3", "設定3(%)": "21.6", "設定4(%)": "21.3", "設定5(%)": "12.5", "設定6(%)": "10.6"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "403", "累計ゲーム数": "123", "BIG回数": "0", "REG回数": "0", "推測差枚": "-157", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "47.4", "設定2(%)": "20.3", "設定3(%)": "14.6", "設定4(%)": "9.3", "設定5(%)": "4.4", "設定6(%)": "4.1"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "404", "累計ゲーム数": "1420", "BIG回数": "5", "REG回数": "1", "推測差枚": "-464", "REG確率": "1420", "最有力設定": "設定1", "設定1(%)": "54.5", "設定2(%)": "20.9", "設定3(%)": "13.2", "設定4(%)": "7.0", "設定5(%)": "2.6", "設定6(%)": "1.8"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "405", "累計ゲーム数": "52", "BIG回数": "0", "REG回数": "0", "推測差枚": "-66", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "46.0", "設定2(%)": "20.1", "設定3(%)": "14.8", "設定4(%)": "9.7", "設定5(%)": "4.7", "設定6(%)": "4.6"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "406", "累計ゲーム数": "10731", "BIG回数": "42", "REG回数": "25", "推測差枚": "-773", "REG確率": "429", "最有力設定": "設定1", "設定1(%)": "25.0", "設定2(%)": "21.7", "設定3(%)": "23.8", "設定4(%)": "18.4", "設定5(%)": "7.5", "設定6(%)": "3.7"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "407", "累計ゲーム数": "812", "BIG回数": "3", "REG回数": "0", "推測差枚": "-284", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "53.0", "設定2(%)": "20.6", "設定3(%)": "13.4", "設定4(%)": "7.5", "設定5(%)": "3.0", "設定6(%)": "2.3"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "408", "累計ゲーム数": "705", "BIG回数": "4", "REG回数": "4", "推測差枚": "488", "REG確率": "176", "最有力設定": "設定1", "設定1(%)": "27.8", "設定2(%)": "16.9", "設定3(%)": "16.9", "設定4(%)": "15.0", "設定5(%)": "10.1", "設定6(%)": "13.3"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "409", "累計ゲーム数": "9690", "BIG回数": "38", "REG回数": "21", "推測差枚": "-830", "REG確率": "461", "最有力設定": "設定1", "設定1(%)": "33.3", "設定2(%)": "23.4", "設定3(%)": "21.7", "設定4(%)": "14.3", "設定5(%)": "5.1", "設定6(%)": "2.3"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "410", "累計ゲーム数": "5224", "BIG回数": "29", "REG回数": "16", "推測差枚": "2146", "REG確率": "326", "最有力設定": "設定6", "設定1(%)": "5.3", "設定2(%)": "6.6", "設定3(%)": "12.2", "設定4(%)": "19.0", "設定5(%)": "20.3", "設定6(%)": "36.6"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "411", "累計ゲーム数": "4851", "BIG回数": "19", "REG回数": "6", "推測差枚": "-854", "REG確率": "808", "最有力設定": "設定1", "設定1(%)": "58.9", "設定2(%)": "21.6", "設定3(%)": "12.2", "設定4(%)": "5.3", "設定5(%)": "1.4", "設定6(%)": "0.6"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "412", "累計ゲーム数": "5197", "BIG回数": "21", "REG回数": "15", "推測差枚": "69", "REG確率": "346", "最有力設定": "設定1", "設定1(%)": "20.2", "設定2(%)": "16.6", "設定3(%)": "19.8", "設定4(%)": "19.2", "設定5(%)": "12.1", "設定6(%)": "12.0"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "413", "累計ゲーム数": "1416", "BIG回数": "4", "REG回数": "1", "推測差枚": "-711", "REG確率": "1416", "最有力設定": "設定1", "設定1(%)": "56.5", "設定2(%)": "20.8", "設定3(%)": "12.6", "設定4(%)": "6.4", "設定5(%)": "2.3", "設定6(%)": "1.5"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "414", "累計ゲーム数": "319", "BIG回数": "1", "REG回数": "0", "推測差枚": "-156", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "48.7", "設定2(%)": "20.4", "設定3(%)": "14.4", "設定4(%)": "8.9", "設定5(%)": "4.0", "設定6(%)": "3.6"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "415", "累計ゲーム数": "533", "BIG回数": "1", "REG回数": "0", "推測差枚": "-431", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "52.6", "設定2(%)": "20.6", "設定3(%)": "13.5", "設定4(%)": "7.6", "設定5(%)": "3.1", "設定6(%)": "2.5"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "416", "累計ゲーム数": "8842", "BIG回数": "33", "REG回数": "21", "推測差枚": "-1003", "REG確率": "421", "最有力設定": "設定1", "設定1(%)": "29.8", "設定2(%)": "22.3", "設定3(%)": "22.0", "設定4(%)": "16.0", "設定5(%)": "6.4", "設定6(%)": "3.4"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "417", "累計ゲーム数": "1130", "BIG回数": "8", "REG回数": "2", "推測差枚": "759", "REG確率": "565", "最有力設定": "設定1", "設定1(%)": "36.8", "設定2(%)": "19.1", "設定3(%)": "16.7", "設定4(%)": "12.6", "設定5(%)": "7.1", "設定6(%)": "7.7"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "418", "累計ゲーム数": "4536", "BIG回数": "25", "REG回数": "6", "推測差枚": "1060", "REG確率": "756", "最有力設定": "設定1", "設定1(%)": "41.1", "設定2(%)": "21.2", "設定3(%)": "17.6", "設定4(%)": "11.5", "設定5(%)": "5.0", "設定6(%)": "3.6"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "419", "累計ゲーム数": "1615", "BIG回数": "7", "REG回数": "2", "推測差枚": "-114", "REG確率": "807", "最有力設定": "設定1", "設定1(%)": "48.9", "設定2(%)": "20.9", "設定3(%)": "14.8", "設定4(%)": "8.8", "設定5(%)": "3.7", "設定6(%)": "2.9"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "420", "累計ゲーム数": "2510", "BIG回数": "9", "REG回数": "5", "推測差枚": "-469", "REG確率": "502", "最有力設定": "設定1", "設定1(%)": "46.2", "設定2(%)": "21.4", "設定3(%)": "15.7", "設定4(%)": "9.6", "設定5(%)": "4.0", "設定6(%)": "3.0"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "421", "累計ゲーム数": "4828", "BIG回数": "20", "REG回数": "9", "推測差枚": "-285", "REG確率": "536", "最有力設定": "設定1", "設定1(%)": "43.7", "設定2(%)": "22.2", "設定3(%)": "17.1", "設定4(%)": "10.4", "設定5(%)": "4.0", "設定6(%)": "2.5"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "422", "累計ゲーム数": "568", "BIG回数": "1", "REG回数": "0", "推測差枚": "-476", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "53.2", "設定2(%)": "20.6", "設定3(%)": "13.3", "設定4(%)": "7.5", "設定5(%)": "3.0", "設定6(%)": "2.3"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "423", "累計ゲーム数": "6075", "BIG回数": "13", "REG回数": "19", "推測差枚": "-2688", "REG確率": "319", "最有力設定": "設定1", "設定1(%)": "35.0", "設定2(%)": "23.1", "設定3(%)": "19.9", "設定4(%)": "13.5", "設定5(%)": "5.4", "設定6(%)": "3.0"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "424", "累計ゲーム数": "1744", "BIG回数": "8", "REG回数": "2", "推測差枚": "-27", "REG確率": "872", "最有力設定": "設定1", "設定1(%)": "48.9", "設定2(%)": "21.0", "設定3(%)": "14.8", "設定4(%)": "8.8", "設定5(%)": "3.7", "設定6(%)": "2.9"}, {"日付": "2026-07-03", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "425", "累計ゲーム数": "3202", "BIG回数": "18", "REG回数": "1", "推測差枚": "527", "REG確率": "3202", "最有力設定": "設定1", "設定1(%)": "56.4", "設定2(%)": "20.9", "設定3(%)": "12.9", "設定4(%)": "6.4", "設定5(%)": "2.1", "設定6(%)": "1.3"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "396", "累計ゲーム数": "4306", "BIG回数": "15", "REG回数": "10", "推測差枚": "-780", "REG確率": "430", "最有力設定": "設定1", "設定1(%)": "68.5", "設定2(%)": "20.2", "設定3(%)": "8.1", "設定4(%)": "2.5", "設定5(%)": "0.5", "設定6(%)": "0.1"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "397", "累計ゲーム数": "4549", "BIG回数": "18", "REG回数": "6", "推測差枚": "-719", "REG確率": "758", "最有力設定": "設定1", "設定1(%)": "56.4", "設定2(%)": "21.8", "設定3(%)": "13.1", "設定4(%)": "6.1", "設定5(%)": "1.8", "設定6(%)": "0.8"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "398", "累計ゲーム数": "976", "BIG回数": "2", "REG回数": "2", "推測差枚": "-555", "REG確率": "488", "最有力設定": "設定1", "設定1(%)": "48.8", "設定2(%)": "20.9", "設定3(%)": "14.6", "設定4(%)": "8.8", "設定5(%)": "3.8", "設定6(%)": "3.1"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "399", "累計ゲーム数": "5006", "BIG回数": "26", "REG回数": "10", "推測差枚": "1094", "REG確率": "500", "最有力設定": "設定1", "設定1(%)": "28.1", "設定2(%)": "18.8", "設定3(%)": "19.6", "設定4(%)": "16.4", "設定5(%)": "8.9", "設定6(%)": "8.1"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "400", "累計ゲーム数": "2302", "BIG回数": "9", "REG回数": "6", "推測差枚": "-107", "REG確率": "383", "最有力設定": "設定1", "設定1(%)": "37.2", "設定2(%)": "20.2", "設定3(%)": "17.4", "設定4(%)": "12.7", "設定5(%)": "6.5", "設定6(%)": "5.9"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "401", "累計ゲーム数": "2291", "BIG回数": "6", "REG回数": "7", "推測差枚": "-753", "REG確率": "327", "最有力設定": "設定1", "設定1(%)": "39.4", "設定2(%)": "20.9", "設定3(%)": "17.1", "設定4(%)": "12.0", "設定5(%)": "5.7", "設定6(%)": "4.8"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "402", "累計ゲーム数": "2824", "BIG回数": "7", "REG回数": "7", "推測差枚": "-1184", "REG確率": "403", "最有力設定": "設定1", "設定1(%)": "46.9", "設定2(%)": "22.0", "設定3(%)": "15.7", "設定4(%)": "9.3", "設定5(%)": "3.7", "設定6(%)": "2.5"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "403", "累計ゲーム数": "1279", "BIG回数": "5", "REG回数": "2", "推測差枚": "-187", "REG確率": "639", "最有力設定": "設定1", "設定1(%)": "47.4", "設定2(%)": "20.8", "設定3(%)": "15.0", "設定4(%)": "9.3", "設定5(%)": "4.1", "設定6(%)": "3.4"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "404", "累計ゲーム数": "654", "BIG回数": "3", "REG回数": "0", "推測差枚": "-82", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "50.2", "設定2(%)": "20.5", "設定3(%)": "14.1", "設定4(%)": "8.4", "設定5(%)": "3.6", "設定6(%)": "3.1"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "405", "累計ゲーム数": "7812", "BIG回数": "35", "REG回数": "20", "推測差枚": "725", "REG確率": "390", "最有力設定": "設定4", "設定1(%)": "14.2", "設定2(%)": "14.5", "設定3(%)": "20.4", "設定4(%)": "22.3", "設定5(%)": "14.7", "設定6(%)": "14.0"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "406", "累計ゲーム数": "8", "BIG回数": "0", "REG回数": "0", "推測差枚": "-10", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "45.2", "設定2(%)": "20.0", "設定3(%)": "15.0", "設定4(%)": "10.0", "設定5(%)": "5.0", "設定6(%)": "4.9"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "407", "累計ゲーム数": "3126", "BIG回数": "14", "REG回数": "5", "推測差枚": "0", "REG確率": "625", "最有力設定": "設定1", "設定1(%)": "45.8", "設定2(%)": "21.4", "設定3(%)": "16.0", "設定4(%)": "9.8", "設定5(%)": "4.0", "設定6(%)": "2.9"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "408", "累計ゲーム数": "10327", "BIG回数": "46", "REG回数": "24", "推測差枚": "656", "REG確率": "430", "最有力設定": "設定4", "設定1(%)": "15.7", "設定2(%)": "16.5", "設定3(%)": "22.9", "設定4(%)": "23.0", "設定5(%)": "12.7", "設定6(%)": "9.1"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "409", "累計ゲーム数": "132", "BIG回数": "0", "REG回数": "0", "推測差枚": "-169", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "47.6", "設定2(%)": "20.3", "設定3(%)": "14.5", "設定4(%)": "9.2", "設定5(%)": "4.3", "設定6(%)": "4.0"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "410", "累計ゲーム数": "6162", "BIG回数": "27", "REG回数": "11", "推測差枚": "-39", "REG確率": "560", "最有力設定": "設定1", "設定1(%)": "42.1", "設定2(%)": "22.5", "設定3(%)": "18.0", "設定4(%)": "11.0", "設定5(%)": "4.1", "設定6(%)": "2.3"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "411", "累計ゲーム数": "5652", "BIG回数": "25", "REG回数": "7", "推測差枚": "-273", "REG確率": "807", "最有力設定": "設定1", "設定1(%)": "55.4", "設定2(%)": "22.1", "設定3(%)": "13.6", "設定4(%)": "6.3", "設定5(%)": "1.8", "設定6(%)": "0.8"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "412", "累計ゲーム数": "2165", "BIG回数": "10", "REG回数": "3", "推測差枚": "32", "REG確率": "721", "最有力設定": "設定1", "設定1(%)": "47.1", "設定2(%)": "21.1", "設定3(%)": "15.4", "設定4(%)": "9.4", "設定5(%)": "4.0", "設定6(%)": "3.1"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "413", "累計ゲーム数": "315", "BIG回数": "0", "REG回数": "1", "推測差枚": "-307", "REG確率": "315", "最有力設定": "設定1", "設定1(%)": "46.1", "設定2(%)": "20.4", "設定3(%)": "14.9", "設定4(%)": "9.7", "設定5(%)": "4.6", "設定6(%)": "4.3"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "414", "累計ゲーム数": "1210", "BIG回数": "7", "REG回数": "5", "推測差枚": "692", "REG確率": "242", "最有力設定": "設定1", "設定1(%)": "25.3", "設定2(%)": "16.3", "設定3(%)": "17.1", "設定4(%)": "15.8", "設定5(%)": "10.9", "設定6(%)": "14.6"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "415", "累計ゲーム数": "10353", "BIG回数": "43", "REG回数": "29", "推測差枚": "347", "REG確率": "357", "最有力設定": "設定4", "設定1(%)": "6.9", "設定2(%)": "10.1", "設定3(%)": "18.6", "設定4(%)": "25.6", "設定5(%)": "19.7", "設定6(%)": "19.2"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "416", "累計ゲーム数": "306", "BIG回数": "0", "REG回数": "0", "推測差枚": "-392", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "50.8", "設定2(%)": "20.5", "設定3(%)": "13.9", "設定4(%)": "8.2", "設定5(%)": "3.5", "設定6(%)": "3.0"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "417", "累計ゲーム数": "1317", "BIG回数": "8", "REG回数": "1", "推測差枚": "423", "REG確率": "1317", "最有力設定": "設定1", "設定1(%)": "45.8", "設定2(%)": "20.4", "設定3(%)": "15.3", "設定4(%)": "9.8", "設定5(%)": "4.5", "設定6(%)": "4.0"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "418", "累計ゲーム数": "738", "BIG回数": "1", "REG回数": "0", "推測差枚": "-694", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "56.1", "設定2(%)": "20.6", "設定3(%)": "12.6", "設定4(%)": "6.6", "設定5(%)": "2.5", "設定6(%)": "1.7"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "419", "累計ゲーム数": "2087", "BIG回数": "6", "REG回数": "3", "推測差枚": "-875", "REG確率": "695", "最有力設定": "設定1", "設定1(%)": "54.6", "設定2(%)": "21.3", "設定3(%)": "13.3", "設定4(%)": "6.9", "設定5(%)": "2.4", "設定6(%)": "1.5"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "420", "累計ゲーム数": "5205", "BIG回数": "21", "REG回数": "12", "推測差枚": "-228", "REG確率": "433", "最有力設定": "設定1", "設定1(%)": "34.0", "設定2(%)": "21.1", "設定3(%)": "19.4", "設定4(%)": "14.2", "設定5(%)": "6.6", "設定6(%)": "4.8"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "421", "累計ゲーム数": "2781", "BIG回数": "12", "REG回数": "7", "推測差枚": "130", "REG確率": "397", "最有力設定": "設定1", "設定1(%)": "34.1", "設定2(%)": "19.8", "設定3(%)": "18.0", "設定4(%)": "13.8", "設定5(%)": "7.3", "設定6(%)": "6.9"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "422", "累計ゲーム数": "2077", "BIG回数": "6", "REG回数": "6", "推測差枚": "-574", "REG確率": "346", "最有力設定": "設定1", "設定1(%)": "40.3", "設定2(%)": "20.8", "設定3(%)": "16.9", "設定4(%)": "11.6", "設定5(%)": "5.6", "設定6(%)": "4.8"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "423", "累計ゲーム数": "5143", "BIG回数": "16", "REG回数": "8", "推測差枚": "-1793", "REG確率": "642", "最有力設定": "設定1", "設定1(%)": "60.6", "設定2(%)": "21.7", "設定3(%)": "11.5", "設定4(%)": "4.6", "設定5(%)": "1.1", "設定6(%)": "0.4"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "424", "累計ゲーム数": "2320", "BIG回数": "10", "REG回数": "3", "推測差枚": "-166", "REG確率": "773", "最有力設定": "設定1", "設定1(%)": "49.9", "設定2(%)": "21.3", "設定3(%)": "14.7", "設定4(%)": "8.4", "設定5(%)": "3.3", "設定6(%)": "2.4"}, {"日付": "2026-07-02", "機種名": "Sドラゴンハナハナ-閃光-SP-30", "台番": "425", "累計ゲーム数": "730", "BIG回数": "2", "REG回数": "1", "推測差枚": "-335", "REG確率": "730", "最有力設定": "設定1", "設定1(%)": "49.1", "設定2(%)": "20.7", "設定3(%)": "14.4", "設定4(%)": "8.7", "設定5(%)": "3.8", "設定6(%)": "3.2"}];
+        const predictions = [{"台番": "423", "スコア": 113, "タグ": "完全放置・大凹み上げ狙い / 高稼働マイナス台(店側のお詫び期待)", "前日差枚": "-2688", "diff_3": -4481, "games_3": 11218, "diff_7": -4481, "games_7": 11218, "diff_14": -4481, "games_14": 11218}, {"台番": "406", "スコア": 30, "タグ": "高稼働マイナス台(店側のお詫び期待)", "前日差枚": "-773", "diff_3": -783, "games_3": 10739, "diff_7": -783, "games_7": 10739, "diff_14": -783, "games_14": 10739}, {"台番": "411", "スコア": 30, "タグ": "高稼働マイナス台(店側のお詫び期待)", "前日差枚": "-854", "diff_3": -1127, "games_3": 10503, "diff_7": -1127, "games_7": 10503, "diff_14": -1127, "games_14": 10503}, {"台番": "415", "スコア": 30, "タグ": "高稼働マイナス台(店側のお詫び期待)", "前日差枚": "-431", "diff_3": -84, "games_3": 10886, "diff_7": -84, "games_7": 10886, "diff_14": -84, "games_14": 10886}, {"台番": "396", "スコア": 27, "タグ": "特筆なし", "前日差枚": "-832", "diff_3": -1612, "games_3": 9682, "diff_7": -1612, "games_7": 9682, "diff_14": -1612, "games_14": 9682}, {"台番": "409", "スコア": 27, "タグ": "特筆なし", "前日差枚": "-830", "diff_3": -999, "games_3": 9822, "diff_7": -999, "games_7": 9822, "diff_14": -999, "games_14": 9822}];
+        
+        const grid = document.getElementById('predictionGrid');
+        if (predictions.length === 0) {
+            grid.innerHTML = "<p>推奨台が見つかりませんでした。</p>";
+        } else {
+            const maxScore = Math.max(...predictions.map(p => p.スコア), 150);
+            
+            predictions.forEach((p, idx) => {
+                let rank = idx === 0 ? "👑 1位" : idx === 1 ? "🥈 2位" : idx === 2 ? "🥉 3位" : `${idx+1}位`;
+                let barWidth = Math.max(Math.min((p.スコア / maxScore) * 100, 100), 0);
+                
+                grid.innerHTML += `
+                    <div class="card">
+                        <div class="card-title">
+                            <span>${rank} / 台番 ${p.台番}</span>
+                            <span class="card-score">Score: ${p.スコア}</span>
+                        </div>
+                        <div class="score-bar-bg">
+                            <div class="score-bar-fill" style="width: ${barWidth}%;"></div>
+                        </div>
+                        <div class="card-tag">${p.タグ}</div>
+                        <div style="margin-bottom: 0.5rem; font-size: 0.9rem;">
+                            前日差枚: <strong class="${p.前日差枚 > 0 ? 'diff-positive' : 'diff-negative'}">${p.前日差枚 > 0 ? '+' : ''}${p.前日差枚}枚</strong>
+                        </div>
+                        
+                        <table class="period-stats">
+                            <tr>
+                                <th>期間</th>
+                                <th>推測差枚</th>
+                                <th>総稼働ゲーム数</th>
+                            </tr>
+                            <tr>
+                                <td>過去3日間</td>
+                                <td class="${p.diff_3 > 0 ? 'diff-positive' : 'diff-negative'}"><strong>${p.diff_3 > 0 ? '+' : ''}${p.diff_3.toLocaleString()}枚</strong></td>
+                                <td>${p.games_3.toLocaleString()} G</td>
+                            </tr>
+                            <tr>
+                                <td>過去1週間</td>
+                                <td class="${p.diff_7 > 0 ? 'diff-positive' : 'diff-negative'}"><strong>${p.diff_7 > 0 ? '+' : ''}${p.diff_7.toLocaleString()}枚</strong></td>
+                                <td>${p.games_7.toLocaleString()} G</td>
+                            </tr>
+                            <tr>
+                                <td>過去2週間</td>
+                                <td class="${p.diff_14 > 0 ? 'diff-positive' : 'diff-negative'}"><strong>${p.diff_14 > 0 ? '+' : ''}${p.diff_14.toLocaleString()}枚</strong></td>
+                                <td>${p.games_14.toLocaleString()} G</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+            });
+        }
+
+        const dateButtonsContainer = document.getElementById('dateButtons');
+        const uniqueDays = [...new Set(rawData.map(item => item['日付']))].sort().reverse();
+        
+        uniqueDays.forEach(day => {
+            const btn = document.createElement('button');
+            btn.className = 'date-btn';
+            btn.textContent = day;
+            btn.onclick = () => selectDate(day, btn);
+            dateButtonsContainer.appendChild(btn);
+        });
+
+        let currentData = [];
+        let sortAsc = true;
+        let currentSortColumn = -1;
+
+        function selectDate(day, btnElement) {
+            document.querySelectorAll('.date-btn').forEach(btn => btn.classList.remove('active'));
+            if(btnElement) btnElement.classList.add('active');
+            
+            currentData = rawData.filter(row => row['日付'] === day);
+            
+            let totalGames = 0; let totalBig = 0; let totalReg = 0; let totalDiff = 0;
+            let count = currentData.length;
+            
+            currentData.forEach(row => {
+                totalGames += parseInt(row['累計ゲーム数']) || 0;
+                totalBig += parseInt(row['BIG回数']) || 0;
+                totalReg += parseInt(row['REG回数']) || 0;
+                totalDiff += parseInt(row['推測差枚']) || 0;
+            });
+            
+            const avgGames = count > 0 ? Math.round(totalGames / count) : 0;
+            const avgDiff = count > 0 ? Math.round(totalDiff / count) : 0;
+            const overallBigProb = totalBig > 0 ? Math.round(totalGames / totalBig) : 0;
+            const overallRegProb = totalReg > 0 ? Math.round(totalGames / totalReg) : 0;
+            const overallTotalProb = (totalBig + totalReg) > 0 ? Math.round(totalGames / (totalBig + totalReg)) : 0;
+            
+            let hallSetting = "設定1 (激辛)";
+            if(overallRegProb > 0) {
+                if(overallRegProb <= 399) hallSetting = "設定6 (極甘)";
+                else if(overallRegProb <= 442) hallSetting = "設定5 (甘)";
+                else if(overallRegProb <= 489) hallSetting = "設定4 (普通)";
+                else if(overallRegProb <= 537) hallSetting = "設定3 (辛)";
+                else if(overallRegProb <= 585) hallSetting = "設定2 (激辛)";
+            }
+            
+            document.getElementById('sumGames').textContent = `${avgGames} G`;
+            
+            const diffEl = document.getElementById('sumDiff');
+            diffEl.textContent = `${avgDiff > 0 ? '+' : ''}${avgDiff} 枚`;
+            diffEl.className = 'summary-value ' + (avgDiff > 0 ? 'diff-positive' : 'diff-negative');
+            
+            document.getElementById('sumBig').textContent = overallBigProb > 0 ? `1/${overallBigProb}` : '-';
+            document.getElementById('sumReg').textContent = overallRegProb > 0 ? `1/${overallRegProb}` : '-';
+            document.getElementById('sumTotal').textContent = overallTotalProb > 0 ? `1/${overallTotalProb}` : '-';
+            document.getElementById('sumSetting').textContent = hallSetting;
+
+            document.getElementById('dailySummary').classList.add('active');
+            document.getElementById('tableContainer').classList.add('active');
+            
+                        currentSortColumn = '台番';
+            sortAsc = true;
+            currentData.sort((a, b) => parseInt(a['台番']) - parseInt(b['台番']));
+            renderTable(currentData);
+        }
+
+        const tbody = document.getElementById('tableBody');
+        function renderTable(data) {
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                const diff = parseInt(row['推測差枚']);
+                let diffClass = diff > 0 ? 'diff-positive' : 'diff-negative';
+                
+                const setting = row['最有力設定'];
+                let settingClass = 'setting-bad';
+                if (setting.includes('6') || setting.includes('5')) settingClass = 'setting-good';
+                else if (setting.includes('4') || setting.includes('3')) settingClass = 'setting-ok';
+                
+                const p6 = parseFloat(row['設定6(%)']) || 0;
+                const p5 = parseFloat(row['設定5(%)']) || 0;
+                const p4 = parseFloat(row['設定4(%)']) || 0;
+                const p3 = parseFloat(row['設定3(%)']) || 0;
+                const p2 = parseFloat(row['設定2(%)']) || 0;
+                const p1 = parseFloat(row['設定1(%)']) || 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${row['台番']}</strong></td>
+                    <td>${row['累計ゲーム数']}</td>
+                    <td>${row['BIG回数']}</td>
+                    <td>${row['REG回数']}</td>
+                    <td class="${diffClass}">${diff > 0 ? '+' : ''}${diff}</td>
+                    <td>1/${row['REG確率']}</td>
+                    <td class="${settingClass}">${setting}</td>
+                    <td>
+                        <div style="font-size: 0.75rem; display: flex; justify-content: space-between; width: 120px;">
+                            <span style="color:#ff4757">6:${Math.round(p6)}%</span>
+                            <span style="color:#ffa502">4:${Math.round(p4)}%</span>
+                            <span style="color:#747d8c">1:${Math.round(p1)}%</span>
+                        </div>
+                        <div class="prob-bar-container">
+                            <div class="prob-6" style="width: ${p6}%"></div>
+                            <div class="prob-5" style="width: ${p5}%"></div>
+                            <div class="prob-4" style="width: ${p4}%"></div>
+                            <div class="prob-3" style="width: ${p3}%"></div>
+                            <div class="prob-2" style="width: ${p2}%"></div>
+                            <div class="prob-1" style="width: ${p1}%"></div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function sortTable(key) {
+            if (!key) return;
+            if (currentSortColumn === key) {
+                sortAsc = !sortAsc;
+            } else {
+                // 台番は昇順、それ以外（差枚、BIG等）は降順スタートが自然
+                sortAsc = (key === '台番') ? true : false;
+            }
+            currentSortColumn = key;
+
+            currentData.sort((a, b) => {
+                let valA = a[key];
+                let valB = b[key];
+                
+                if (key === '最有力設定') {
+                    if (valA < valB) return sortAsc ? -1 : 1;
+                    if (valA > valB) return sortAsc ? 1 : -1;
+                    return 0;
+                }
+                
+                // 台番、G数、BIG、REG、差枚、確率などはすべて数値比較
+                valA = parseFloat(String(valA).replace(/[^0-9.-]+/g, "")) || 0;
+                valB = parseFloat(String(valB).replace(/[^0-9.-]+/g, "")) || 0;
+                
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+            renderTable(currentData);
+        }
+
+                function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // 初期化処理（これを呼ばないとデータテーブルが空になる）
+        if(uniqueDays.length > 0) {
+            selectDate(uniqueDays[0], dateButtonsContainer.firstChild);
+        }
+    </script>
+</body>
+</html>
