@@ -160,6 +160,15 @@ def main():
     except Exception as e:
         print(f"Error running check_missing_data.py: {e}")
 
+    print("\n[OK] データをクラウド（GitHub）へ非公開アップロード中...")
+    try:
+        subprocess.run(['git', 'add', '.'], cwd=base_dir, check=True)
+        subprocess.run(['git', 'commit', '-m', 'Auto update'], cwd=base_dir, check=False)
+        subprocess.run(['git', 'push', 'origin', 'main'], cwd=base_dir, check=True)
+        print("[OK] スマホ用ページの更新が完了しました！")
+    except Exception as e:
+        print(f"Error uploading to GitHub: {e}")
+
     print("\n[OK] すべての処理が完了しました！")
 
 if __name__ == "__main__":
