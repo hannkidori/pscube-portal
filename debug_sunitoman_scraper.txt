@@ -1,0 +1,42 @@
+score = 0
+    tags = []
+    
+    recent_3days = history[:3]
+    recent_7days = history[:7]
+    recent_14days = history[:14]
+    
+    diff_3days = sum(int(r["推測差枚"]) for r in recent_3days)
+    games_3days = sum(int(r["累計ゲーム数"]) for r in recent_3days)
+    
+    diff_7days = sum(int(r["推測差枚"]) for r in recent_7days)
+    games_7days = sum(int(r["累計ゲーム数"]) for r in recent_7days)
+    
+    diff_14days = sum(int(r["推測差枚"]) for r in recent_14days)
+    games_14days = sum(int(r["累計ゲーム数"]) for r in recent_14days)
+    
+    # 前日高設定に対するペナルティ（完全除外ではなくスコアを下げて警戒）
+    if latest_data["最有力設定"] in ["設定6", "設定5", "設定V"]:
+        score -= 50
+        tags.append("前日高設定(警戒)")
+        
+    # 暫定ロジック（A案＋B案の融合）
+    # サンシャイン糸満店の癖（据え置き率0%、平均高設定投入率6%、大凹み上げ率11%）に特化
+    
+    # 1週間ベースでの飢餓状態・凹み評価 (A案)
+    if diff_7days <= -4000:
+        score += 80
+        tags.append("完全放置・大凹み上げ狙い")
+    elif diff_7days <= -2000:
+        score += 50
+        tags.append("完全放置・凹み上げ狙い")
+        
+    # 稼働ゲーム数の評価（B案：店側のお詫び・不発狙い）
+    if diff_7days < 0 and games_7days > 0:
+        game_bonus = int(games_7days / 1000) * 3
+        score += game_bonus
+        if game_bonus >= 30: 
+            tags.append(f"高稼働マイナス台(店側のお詫び期待)")
+            
+    # ※サンシャイン糸満店はまだ据え置きの有無が不明なため、前日高設定に対するペナルティはかけずにデータ蓄積を待つ
+
+    

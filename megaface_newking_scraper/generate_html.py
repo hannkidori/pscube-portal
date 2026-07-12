@@ -53,8 +53,9 @@ for daiban, history in machine_history.items():
     latest_data = history[0]
     score = 0
     tags = []
+    if 0 < 0:
+        tags.append("ベース設定低め(基本回収)")
     
-    # 過去3日、1週間(7日)、2週間(14日)のデータ計算
     recent_3days = history[:3]
     recent_7days = history[:7]
     recent_14days = history[:14]
@@ -68,33 +69,36 @@ for daiban, history in machine_history.items():
     diff_14days = sum(int(r["推測差枚"]) for r in recent_14days)
     games_14days = sum(int(r["累計ゲーム数"]) for r in recent_14days)
     
-    # スコア計算は「過去1週間(7日間)」の飢餓状態をベースにするのがバランスが良い
-    # （14日だと厳しすぎて該当なしになる可能性があるため）
-    has_recent_high = any(r["最有力設定"] in ["設定V", "設定4"] or int(r["推測差枚"]) >= 2000 for r in recent_7days)
-    
-    if has_recent_high:
-        score -= 50
-        tags.append("1週間内に高設定/出玉あり(見送り)")
-    else:
-        # 1週間ベースでの飢餓状態・凹み評価
-        if diff_7days <= -4000:
-            score += 80
-            tags.append("完全放置・大凹み上げ狙い")
-        elif diff_7days <= -2000:
+    # 前日が高設定だった場合の差枚数に応じた段階的ペナルティ/ボーナス
+    latest_diff = int(latest_data.get("推測差枚", 0))
+    if latest_data["最有力設定"] in ["設定6", "設定5", "設定V", "設定4"]:
+        if latest_diff >= 4000:
+            score -= 80
+            tags.append("前日大爆発(下げ濃厚)")
+        elif latest_diff >= 2000:
+            score -= 40
+            tags.append("前日優秀台(下げ警戒)")
+        elif latest_diff > 0:
+            score -= 10
+            tags.append("前日ちょい勝ち(据え置き期待)")
+        else:
             score += 50
-            tags.append("完全放置・凹み上げ狙い")
+            tags.append("前日高設定の不発(据え置き大チャンス!)")
             
-        # 稼働ゲーム数の評価（1週間の稼働ベース）
-        if diff_7days < 0 and games_7days > 0:
-            game_bonus = int(games_7days / 1000) * 3
-            score += game_bonus
-            if game_bonus >= 30: 
-                tags.append(f"高稼働マイナス台(店側のお詫び期待)")
-                
-    # 前日据え置きの完全否定
-    if latest_data["最有力設定"] in ["設定V", "設定4"]:
-        score -= 100
-        tags.append("前日高設定(下げ確実)")
+    # マイナスからの反発・凹み上げ狙い
+    if diff_7days <= -4000:
+        score += 80
+        tags.append("完全放置・大凹み上げ狙い")
+    elif diff_7days <= -2000:
+        score += 50
+        tags.append("完全放置・凹み上げ狙い")
+        
+    # 高稼働マイナス台への店側のお詫び期待
+    if diff_7days < 0 and games_7days > 0:
+        game_bonus = int(games_7days / 1000) * 3
+        score += game_bonus
+        if game_bonus >= 30: 
+            tags.append("高稼働マイナス台(お詫び期待)")
 
     if not tags:
         tags.append("特筆なし")
