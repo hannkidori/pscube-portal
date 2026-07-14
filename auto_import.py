@@ -171,5 +171,31 @@ def main():
 
     print("\n[OK] すべての処理が完了しました！")
 
+    print("\n処理済みのファイルをアーカイブに移動しています...")
+    archive_dir = os.path.join(base_dir, "daily_import_archive")
+    os.makedirs(archive_dir, exist_ok=True)
+    
+    # daily_import内のフォルダをすべてarchiveへ移動
+    for item in os.listdir(import_dir):
+        item_path = os.path.join(import_dir, item)
+        if os.path.isdir(item_path):
+            target_path = os.path.join(archive_dir, item)
+            try:
+                if os.path.exists(target_path):
+                    # 既に同名フォルダがあれば中身を統合
+                    for root, _, files in os.walk(item_path):
+                        for f in files:
+                            src_file = os.path.join(root, f)
+                            rel_path = os.path.relpath(src_file, item_path)
+                            dst_file = os.path.join(target_path, rel_path)
+                            os.makedirs(os.path.dirname(dst_file), exist_ok=True)
+                            shutil.move(src_file, dst_file)
+                    shutil.rmtree(item_path)
+                else:
+                    shutil.move(item_path, archive_dir)
+            except Exception as e:
+                print(f"Failed to archive {item}: {e}")
+    print("[OK] アーカイブ完了！")
+
 if __name__ == "__main__":
     main()
