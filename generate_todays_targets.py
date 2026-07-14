@@ -98,25 +98,25 @@ def main():
         return f"""
         <div class="target-item">
             <div class="target-header">
-                <div class="target-rank">{{medal_icon}}</div>
+                <div class="target-rank">{medal_icon}</div>
                 <div class="target-machine">
-                    <span class="target-icon">{{icon}}</span>
-                    <span class="target-name">{{row['機種名']}}</span>
-                    <span class="target-daiban">{{row['台番']}}番台</span>
+                    <span class="target-icon">{icon}</span>
+                    <span class="target-name">{row['機種名']}</span>
+                    <span class="target-daiban">{row['台番']}番台</span>
                 </div>
             </div>
             <div class="target-stats">
                 <div class="stat-box">
                     <span class="stat-label">前日</span>
-                    <span class="stat-val {{'plus' if row['前日差枚'] > 0 else 'minus'}}">{{fmt_num(row['前日差枚'])}}枚</span>
+                    <span class="stat-val {'plus' if row['前日差枚'] > 0 else 'minus'}">{fmt_num(row['前日差枚'])}枚</span>
                 </div>
                 <div class="stat-box highlight">
                     <span class="stat-label">過去7日間</span>
-                    <span class="stat-val {{'plus' if row['7日間差枚'] > 0 else 'minus'}}">{{fmt_num(row['7日間差枚'])}}枚</span>
+                    <span class="stat-val {'plus' if row['7日間差枚'] > 0 else 'minus'}">{fmt_num(row['7日間差枚'])}枚</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-label">過去14日間</span>
-                    <span class="stat-val {{'plus' if row['14日間差枚'] > 0 else 'minus'}}">{{fmt_num(row['14日間差枚'])}}枚</span>
+                    <span class="stat-val {'plus' if row['14日間差枚'] > 0 else 'minus'}">{fmt_num(row['14日間差枚'])}枚</span>
                 </div>
             </div>
         </div>
