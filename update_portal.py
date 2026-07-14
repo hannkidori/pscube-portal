@@ -262,3 +262,11 @@ with open(html_file, "w", encoding="utf-8") as f:
     f.write(html_content)
 
 print("Portal index.html has been updated with the latest store stats and Top 3 targets.")
+
+# 今日の狙い目（超絶凹み台ランキング）ページを生成する
+import subprocess
+try:
+    print("Generating today's targets page...")
+    subprocess.run(["python", "generate_todays_targets.py"], cwd=base_dir, check=True)
+except Exception as e:
+    print(f"Error generating today's targets: {e}")
