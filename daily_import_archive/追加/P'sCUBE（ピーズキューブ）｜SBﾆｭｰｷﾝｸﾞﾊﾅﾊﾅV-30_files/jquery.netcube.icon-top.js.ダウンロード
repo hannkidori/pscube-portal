@@ -1,0 +1,100 @@
+/*!
+ * jquery.netcube.icon-top.js
+ * 2014/09/12
+ *
+ */
+(function($){
+    // param = {href:url,title:title,i18n_images:img_path}
+    $.fn.iconShow = function( param ){
+        var self = this;
+
+        var options = {
+            opacity:{show:1.0,hide:0},
+            time:{show:0,hide:500,scrollStop:1000},
+            image:'/' + param.i18n_images + '/00/icon-top.png'
+        };
+
+        self.css({ position:'fixed'
+                  ,display:'block'
+                  ,opacity:options.opacity.hide
+                  ,zindex:10
+                  ,bottom:'1em'
+                  ,right:'.5em'
+                  ,width:'50%'
+                  ,maxWidth:'600px'
+                  ,zIndex:999
+        });
+
+        var _event = 'ontouchstart' in window ? 'touchstart' : 'click';
+
+        var img = $('<img>')
+                  .css({width:'100%',hight:'100%'})
+        var a   = $('<a>')
+                  .css({cursor:'pointer'})
+                  .attr({title:param.title})
+                  .on(_event,function(){
+$(this).blur();
+$('html,body').stop(true,true).animate({scrollTop:0}, '500');
+//return false;
+        });
+
+        self.append(a.append(img));
+
+        var timerID;
+        var visible  = false;
+        var progress = {show:false,hide:false};
+//        $(window).on('scroll touchstart',function(e){
+        $(window).on('scroll',function(e){
+            if(timerID) clearTimeout(timerID);
+            timerID = setTimeout(function(){
+                $(self).trigger('scrollStop');
+                clearTimeout(timerID);
+            },options.time.scrollStop);
+
+            img.attr({src:options.image});
+
+            if( progress.hide ) self.trigger('hidecancel');
+            self.trigger('show');
+        });
+
+        $(self).on('scrollStop',function(e){
+            self.trigger('hide');
+        });
+
+        $(self).on('show',function(e){
+            if( visible ) return;
+            if( progress.show ) return;
+            progress.show = true;
+//console.log("show-S");
+$(this).show();
+            $(this).animate({opacity:options.opacity.show},
+                            options.time.show,'swing',function(){
+                progress.show = false;
+                visible = true;
+//console.log("show-E");
+            });
+        });
+
+        $(self).on('hide',function(e){
+            if(! visible ) return;
+            progress.hide = true;
+//console.log("hide-S");
+            $(this).animate({opacity:options.opacity.hide},
+                            options.time.hide,'swing',function(){
+                progress.hide = false;
+                visible = false;
+
+                if(! Number($(this).css('opacity')) )
+                  $(this).hide();
+//console.log("hide-E");
+            });
+        });
+
+        $(self).on('hidecancel',function(e){
+//console.log("cancel");
+            $(this).stop(true,true).show();
+        });
+
+        //$(self).trigger('scroll');   //初回は表示
+    };
+})(jQuery);
