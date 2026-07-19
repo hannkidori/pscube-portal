@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 import shutil
 import subprocess
@@ -126,6 +127,16 @@ def main():
     except Exception as e:
         print(f"Error running check_anomalies.py: {e}")
 
+    print("\n[必須確認] 2店舗6機種166台の完全性チェックを実行中...")
+    try:
+        subprocess.run(['python', 'validate_daily_166.py'], cwd=base_dir, check=True)
+    except subprocess.CalledProcessError:
+        print("\n❌ データの抽出が不完全なため、処理を中断しました。")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error running validate_daily_166.py: {e}")
+        sys.exit(1)
+
     print("\n全レポートとポータルページを更新中...")
     import pandas as pd
     for folder in all_scraper_folders:
@@ -175,12 +186,12 @@ def main():
     archive_dir = os.path.join(base_dir, "daily_import_archive")
     os.makedirs(archive_dir, exist_ok=True)
     
-    # daily_import内のフォルダをすべてarchiveへ移動
+    # daily_import内のフォルダやファイルをすべてarchiveへ移動
     for item in os.listdir(import_dir):
         item_path = os.path.join(import_dir, item)
-        if os.path.isdir(item_path):
-            target_path = os.path.join(archive_dir, item)
-            try:
+        target_path = os.path.join(archive_dir, item)
+        try:
+            if os.path.isdir(item_path):
                 if os.path.exists(target_path):
                     # 既に同名フォルダがあれば中身を統合
                     for root, _, files in os.walk(item_path):
@@ -193,8 +204,13 @@ def main():
                     shutil.rmtree(item_path)
                 else:
                     shutil.move(item_path, archive_dir)
-            except Exception as e:
-                print(f"Failed to archive {item}: {e}")
+            else:
+                # ファイルの場合
+                if os.path.exists(target_path):
+                    os.remove(target_path)
+                shutil.move(item_path, archive_dir)
+        except Exception as e:
+            print(f"Failed to archive {item}: {e}")
     print("[OK] アーカイブ完了！")
 
 if __name__ == "__main__":
