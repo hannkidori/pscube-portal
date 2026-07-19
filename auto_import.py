@@ -137,6 +137,16 @@ def main():
         print(f"Error running validate_daily_166.py: {e}")
         sys.exit(1)
 
+    print("\n[必須確認] 重複データ（前日のコピー）チェックを実行中...")
+    try:
+        subprocess.run(['python', 'validate_identical_data.py'], cwd=base_dir, check=True)
+    except subprocess.CalledProcessError:
+        print("\n❌ 重複データが存在するため、処理を中断しました。")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error running validate_identical_data.py: {e}")
+        sys.exit(1)
+
     print("\n全レポートとポータルページを更新中...")
     import pandas as pd
     for folder in all_scraper_folders:
