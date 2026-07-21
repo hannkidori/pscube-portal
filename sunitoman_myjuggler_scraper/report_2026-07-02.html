@@ -291,6 +291,42 @@
             });
         }
 
+        
+        function getCornerStyle(daiban) {
+            daiban = parseInt(daiban);
+            let corner = null;
+            const store = 'SUNITOMAN';
+            const machine = 'マイジャグラー';
+            
+            if (store === 'MEGAFACE') {
+                if (machine === 'マイジャグラー') {
+                    if (daiban === 543 || daiban === 544) corner = 'aisle';
+                    if (daiban === 533 || daiban === 554) corner = 'opposite';
+                } else if (machine === 'キング') {
+                    if (daiban === 390) corner = 'aisle';
+                    if (daiban === 373) corner = 'opposite';
+                } else if (machine === 'ニューキング') {
+                    if ([319, 354, 355].includes(daiban)) corner = 'aisle';
+                    if ([336, 337, 372].includes(daiban)) corner = 'opposite';
+                }
+            } else if (store === 'SUNITOMAN') {
+                if (machine === 'ドラゴン') {
+                    if (daiban === 396 || daiban === 425) corner = 'aisle';
+                    if (daiban === 410 || daiban === 411) corner = 'opposite';
+                } else if (machine === 'ニューキング') {
+                    if (daiban === 336 || daiban === 365) corner = 'aisle';
+                    if (daiban === 350 || daiban === 351) corner = 'opposite';
+                } else if (machine === 'マイジャグラー') {
+                    if (daiban === 273 || daiban === 304) corner = 'aisle';
+                    if (daiban === 278 || daiban === 299) corner = 'opposite';
+                }
+            }
+            
+            if (corner === 'aisle') return 'background: rgba(255, 60, 60, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: white;';
+            if (corner === 'opposite') return 'background: rgba(60, 100, 255, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: white;';
+            return '';
+        }
+
         const dateButtonsContainer = document.getElementById('dateButtons');
         const uniqueDays = [...new Set(rawData.map(item => item['日付']))].sort().reverse();
         
