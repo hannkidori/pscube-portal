@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>スロット分析＆予測レポート</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #a55eea;
+            --secondary: #2f3542;
+            --bg: #1e272e;
+            --text: #f1f2f6;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --gold: #ffa502;
+            --neon-blue: #00d2d3;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #1e272e 0%, #2f3542 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 2rem; animation: fadeInDown 0.8s ease; }
+        h1 {
+            font-size: 2.5rem; font-weight: 900;
+            background: linear-gradient(to right, #a55eea, #fc5c65);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        p.subtitle { color: #a4b0be; font-size: 1.1rem; }
+        
+        .date-banner {
+            background: rgba(0, 210, 211, 0.1);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 15px rgba(0, 210, 211, 0.2);
+        }
+        
+        .tabs { display: flex; justify-content: center; margin-bottom: 2rem; gap: 1rem; }
+        .tab-btn {
+            background: var(--card-bg); color: var(--text);
+            border: 1px solid var(--border); border-radius: 30px;
+            padding: 0.8rem 2rem; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .tab-btn.active { background: linear-gradient(to right, #a55eea, #fc5c65); border-color: transparent; box-shadow: 0 4px 15px rgba(165, 94, 234, 0.4); }
+        .tab-content { display: none; animation: fadeInUp 0.5s ease; }
+        .tab-content.active { display: block; }
+        
+        .date-buttons-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 2rem; }
+        .date-btn {
+            background: rgba(255,255,255,0.05); color: #a4b0be;
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 0.8rem 1.5rem; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: 0.3s;
+        }
+        .date-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .date-btn.active { background: #a55eea; color: #fff; border-color: #a55eea; box-shadow: 0 4px 15px rgba(165, 94, 234, 0.4); }
+        
+        .summary-dashboard { display: none; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .summary-dashboard.active { display: grid; animation: fadeInUp 0.5s ease; }
+        .summary-card { background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; text-align: center; }
+        .summary-title { font-size: 0.9rem; color: #a4b0be; margin-bottom: 0.5rem; }
+        .summary-value { font-size: 1.5rem; font-weight: 900; color: #fff; }
+        
+        .table-container {
+            display: none; background: var(--card-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); overflow-x: auto;
+        }
+        .table-container.active { display: block; animation: fadeInUp 0.5s ease; }
+        table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+        th, td { padding: 1rem; border-bottom: 1px solid var(--border); }
+        th { font-weight: 600; color: #a55eea; cursor: pointer; }
+        tr:hover { background: rgba(255, 255, 255, 0.1); transform: scale(1.01); transition: 0.2s; }
+        
+        .diff-positive { color: #2ed573; font-weight: 800; }
+        .diff-negative { color: #ff4757; font-weight: 800; }
+        .setting-good { color: #a55eea; font-weight: 800; }
+        .setting-ok { color: #ffa502; font-weight: 800; }
+        .setting-bad { color: #747d8c; font-weight: 400; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.5rem; }
+
+        .card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+            border: 1px solid var(--border); border-radius: 16px;
+            padding: 1.5rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            position: relative; overflow: hidden;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(to right, #a55eea, #fc5c65);
+        }
+        .card-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .card-score { color: var(--gold); font-size: 1.2rem; }
+        
+        .score-bar-bg { background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; margin-bottom: 1.2rem; overflow: hidden; }
+        .score-bar-fill { height: 100%; background: linear-gradient(to right, #a55eea, #fc5c65); box-shadow: 0 0 10px rgba(165, 94, 234, 0.5); }
+
+        .card-tag { display: inline-block; background: rgba(165, 94, 234, 0.2); color: #fc5c65; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; margin-bottom: 1rem; }
+        
+        .period-stats { width: 100%; border-collapse: collapse; margin-top: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; }
+        .period-stats th, .period-stats td { padding: 0.5rem; text-align: center; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .period-stats th { background: rgba(255,255,255,0.05); color: #a4b0be; font-weight: 600; }
+        .period-stats tr:last-child td { border-bottom: none; }
+        
+        .prob-bar-container { width: 120px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; display: flex; overflow: hidden; margin-top: 4px; }
+        .prob-6 { background: #a55eea; }
+        .prob-5 { background: #ff4757; }
+        .prob-4 { background: #ffa502; }
+        .prob-3 { background: #eccc68; }
+        .prob-2 { background: #7bed9f; }
+        .prob-1 { background: #747d8c; }
+        
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="margin-bottom: 1rem;">
+            <a href="../index.html" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; transition: background 0.3s; border: 1px solid rgba(255,255,255,0.2);" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                <span style="font-size: 1.2rem;">🏠</span> ポータルへ戻る
+            </a>
+        </div>
+        <header>
+            <h1>AI PREDICTION & ANALYSIS</h1>
+            <p class="subtitle">SマイジャグラーV / サンシャイン糸満店</p>
+        </header>
+        <div style="text-align: center;">
+            
+<div style="text-align: center; margin-bottom: 1.5rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; display: inline-block;">
+    <span style="color: #00d2d3; font-weight: bold; margin-right: 10px;">📅 表示中のデータ: </span>
+    <select onchange="window.location.href=this.value" style="padding: 8px 15px; border-radius: 5px; background: #2f3542; color: #fff; border: 1px solid #00d2d3; cursor: pointer; font-size: 1rem; font-weight: bold; outline: none;">
+        <option value="report.html" >2026-07-20 (最新)</option>
+<option value="report_2026-07-19.html" >2026-07-19</option>
+<option value="report_2026-07-18.html" >2026-07-18</option>
+<option value="report_2026-07-17.html" >2026-07-17</option>
+<option value="report_2026-07-16.html" >2026-07-16</option>
+<option value="report_2026-07-15.html" >2026-07-15</option>
+<option value="report_2026-07-14.html" >2026-07-14</option>
+<option value="report_2026-07-13.html" >2026-07-13</option>
+<option value="report_2026-07-12.html" >2026-07-12</option>
+<option value="report_2026-07-11.html" >2026-07-11</option>
+<option value="report_2026-07-10.html" >2026-07-10</option>
+<option value="report_2026-07-09.html" >2026-07-09</option>
+<option value="report_2026-07-08.html" >2026-07-08</option>
+<option value="report_2026-07-07.html" >2026-07-07</option>
+<option value="report_2026-07-06.html" >2026-07-06</option>
+<option value="report_2026-07-05.html" >2026-07-05</option>
+<option value="report_2026-07-04.html" selected>2026-07-04</option>
+<option value="report_2026-07-03.html" >2026-07-03</option>
+<option value="report_2026-07-02.html" >2026-07-02</option>
+
+    </select>
+</div>
+
+        </div>
+
+        <div class="date-banner">
+            📅 明日 (2026-07-05) の営業日属性: ジャグラー特日（5の付く日）
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn" onclick="switchTab('prediction')">🎯 明日の狙い目予測</button>
+            <button class="tab-btn active" onclick="switchTab('data')">📊 全データ解析</button>
+        </div>
+
+        <!-- 予測タブ -->
+        <div id="prediction" class="tab-content">
+            <h2 style="margin-bottom: 2rem; color: var(--gold);">🤡 AI推奨 狙い目ランキング（高稼働凹み・完全放置特化）</h2>
+            <div class="grid" id="predictionGrid"></div>
+        </div>
+
+        <!-- データタブ -->
+        <div id="data" class="tab-content active">
+            <div class="date-buttons-container" id="dateButtons"></div>
+            
+            <div class="summary-dashboard" id="dailySummary">
+                <div class="summary-card">
+                    <div class="summary-title">平均ゲーム数</div>
+                    <div class="summary-value" id="sumGames">0 G</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">平均差枚</div>
+                    <div class="summary-value" id="sumDiff" style="color: var(--gold);">+0 枚</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">全体BIG確率</div>
+                    <div class="summary-value" id="sumBig">1/0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">全体REG確率</div>
+                    <div class="summary-value" id="sumReg">1/0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">全体合算</div>
+                    <div class="summary-value" id="sumTotal">1/0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">ホール全体推測設定</div>
+                    <div class="summary-value" id="sumSetting" style="color: #a55eea;">設定?</div>
+                </div>
+            </div>
+
+            <div class="table-container" id="tableContainer">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('台番')">台番 ⇅</th>
+                            <th onclick="sortTable('累計ゲーム数')">G数 ⇅</th>
+                            <th onclick="sortTable('BIG回数')">BIG ⇅</th>
+                            <th onclick="sortTable('REG回数')">REG ⇅</th>
+                            <th onclick="sortTable('推測差枚')">推測差枚 ⇅</th>
+                            <th onclick="sortTable('REG確率')">REG確率 ⇅</th>
+                            <th onclick="sortTable('最有力設定')">最有力設定 ⇅</th>
+                            <th>ベイズ推定(設定割合%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [{"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "273", "累計ゲーム数": "5218", "BIG回数": "23", "REG回数": "14", "推測差枚": "652", "REG確率": "372", "最有力設定": "設定1", "設定1(%)": "47.1", "設定2(%)": "22.8", "設定3(%)": "16.9", "設定4(%)": "8.7", "設定5(%)": "3.4", "設定6(%)": "1.1"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "274", "累計ゲーム数": "2942", "BIG回数": "11", "REG回数": "6", "推測差枚": "-286", "REG確率": "490", "最有力設定": "設定1", "設定1(%)": "56.6", "設定2(%)": "23.1", "設定3(%)": "12.9", "設定4(%)": "5.1", "設定5(%)": "1.7", "設定6(%)": "0.6"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "275", "累計ゲーム数": "2386", "BIG回数": "5", "REG回数": "6", "推測差枚": "-1064", "REG確率": "397", "最有力設定": "設定1", "設定1(%)": "53.2", "設定2(%)": "22.9", "設定3(%)": "14.7", "設定4(%)": "6.3", "設定5(%)": "2.0", "設定6(%)": "0.9"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "276", "累計ゲーム数": "6666", "BIG回数": "24", "REG回数": "28", "推測差枚": "512", "REG確率": "238", "最有力設定": "設定4", "設定1(%)": "7.9", "設定2(%)": "6.9", "設定3(%)": "18.8", "設定4(%)": "31.0", "設定5(%)": "18.0", "設定6(%)": "17.4"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "277", "累計ゲーム数": "1883", "BIG回数": "10", "REG回数": "3", "推測差枚": "446", "REG確率": "627", "最有力設定": "設定1", "設定1(%)": "54.4", "設定2(%)": "22.3", "設定3(%)": "12.9", "設定4(%)": "6.3", "設定5(%)": "2.7", "設定6(%)": "1.4"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "278", "累計ゲーム数": "4035", "BIG回数": "11", "REG回数": "8", "推測差枚": "-1395", "REG確率": "504", "最有力設定": "設定1", "設定1(%)": "62.4", "設定2(%)": "23.5", "設定3(%)": "10.6", "設定4(%)": "2.7", "設定5(%)": "0.6", "設定6(%)": "0.1"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "299", "累計ゲーム数": "6749", "BIG回数": "29", "REG回数": "22", "推測差枚": "1037", "REG確率": "306", "最有力設定": "設定1", "設定1(%)": "28.9", "設定2(%)": "18.0", "設定3(%)": "22.5", "設定4(%)": "18.3", "設定5(%)": "8.5", "設定6(%)": "3.7"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "300", "累計ゲーム数": "3222", "BIG回数": "13", "REG回数": "8", "推測差枚": "52", "REG確率": "402", "最有力設定": "設定1", "設定1(%)": "50.8", "設定2(%)": "22.7", "設定3(%)": "15.1", "設定4(%)": "7.4", "設定5(%)": "2.8", "設定6(%)": "1.2"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "301", "累計ゲーム数": "1797", "BIG回数": "4", "REG回数": "3", "推測差枚": "-891", "REG確率": "599", "最有力設定": "設定1", "設定1(%)": "57.7", "設定2(%)": "22.9", "設定3(%)": "12.5", "設定4(%)": "4.8", "設定5(%)": "1.5", "設定6(%)": "0.7"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "302", "累計ゲーム数": "2490", "BIG回数": "5", "REG回数": "6", "推測差枚": "-1188", "REG確率": "415", "最有力設定": "設定1", "設定1(%)": "54.7", "設定2(%)": "23.1", "設定3(%)": "14.2", "設定4(%)": "5.7", "設定5(%)": "1.7", "設定6(%)": "0.7"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "303", "累計ゲーム数": "1634", "BIG回数": "7", "REG回数": "3", "推測差枚": "22", "REG確率": "544", "最有力設定": "設定1", "設定1(%)": "53.0", "設定2(%)": "22.2", "設定3(%)": "13.7", "設定4(%)": "6.8", "設定5(%)": "2.8", "設定6(%)": "1.6"}, {"日付": "2026-07-04", "機種名": "SマイジャグラーV", "台番": "304", "累計ゲーム数": "3995", "BIG回数": "9", "REG回数": "11", "推測差枚": "-1539", "REG確率": "363", "最有力設定": "設定1", "設定1(%)": "52.6", "設定2(%)": "23.6", "設定3(%)": "15.8", "設定4(%)": "6.0", "設定5(%)": "1.5", "設定6(%)": "0.5"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "273", "累計ゲーム数": "5892", "BIG回数": "19", "REG回数": "19", "推測差枚": "-630", "REG確率": "310", "最有力設定": "設定1", "設定1(%)": "38.4", "設定2(%)": "21.5", "設定3(%)": "22.0", "設定4(%)": "12.5", "設定5(%)": "4.0", "設定6(%)": "1.4"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "274", "累計ゲーム数": "3648", "BIG回数": "13", "REG回数": "8", "推測差枚": "-454", "REG確率": "456", "最有力設定": "設定1", "設定1(%)": "56.9", "設定2(%)": "23.5", "設定3(%)": "13.0", "設定4(%)": "4.8", "設定5(%)": "1.5", "設定6(%)": "0.4"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "275", "累計ゲーム数": "2123", "BIG回数": "7", "REG回数": "2", "推測差枚": "-655", "REG確率": "1061", "最有力設定": "設定1", "設定1(%)": "63.2", "設定2(%)": "22.8", "設定3(%)": "9.8", "設定4(%)": "3.0", "設定5(%)": "0.9", "設定6(%)": "0.3"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "276", "累計ゲーム数": "5594", "BIG回数": "14", "REG回数": "20", "推測差枚": "-1379", "REG確率": "279", "最有力設定": "設定1", "設定1(%)": "33.1", "設定2(%)": "20.0", "設定3(%)": "24.6", "設定4(%)": "15.6", "設定5(%)": "4.8", "設定6(%)": "2.0"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "277", "累計ゲーム数": "4610", "BIG回数": "22", "REG回数": "8", "推測差枚": "559", "REG確率": "576", "最有力設定": "設定1", "設定1(%)": "62.8", "設定2(%)": "23.4", "設定3(%)": "9.8", "設定4(%)": "2.9", "設定5(%)": "0.9", "設定6(%)": "0.2"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "278", "累計ゲーム数": "1365", "BIG回数": "1", "REG回数": "2", "推測差枚": "-1193", "REG確率": "682", "最有力設定": "設定1", "設定1(%)": "57.8", "設定2(%)": "22.8", "設定3(%)": "12.5", "設定4(%)": "4.8", "設定5(%)": "1.5", "設定6(%)": "0.7"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "299", "累計ゲーム数": "4052", "BIG回数": "14", "REG回数": "12", "推測差枚": "-311", "REG確率": "337", "最有力設定": "設定1", "設定1(%)": "45.1", "設定2(%)": "22.2", "設定3(%)": "18.1", "設定4(%)": "9.7", "設定5(%)": "3.5", "設定6(%)": "1.5"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "300", "累計ゲーム数": "6613", "BIG回数": "28", "REG回数": "28", "推測差枚": "1535", "REG確率": "236", "最有力設定": "設定4", "設定1(%)": "5.1", "設定2(%)": "4.7", "設定3(%)": "13.9", "設定4(%)": "28.7", "設定5(%)": "21.4", "設定6(%)": "26.2"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "301", "累計ゲーム数": "2667", "BIG回数": "5", "REG回数": "8", "推測差枚": "-1207", "REG確率": "333", "最有力設定": "設定1", "設定1(%)": "48.8", "設定2(%)": "22.5", "設定3(%)": "16.8", "設定4(%)": "8.1", "設定5(%)": "2.6", "設定6(%)": "1.2"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "302", "累計ゲーム数": "676", "BIG回数": "1", "REG回数": "1", "推測差枚": "-468", "REG確率": "676", "最有力設定": "設定1", "設定1(%)": "51.8", "設定2(%)": "21.8", "設定3(%)": "14.1", "設定4(%)": "7.3", "設定5(%)": "3.0", "設定6(%)": "2.1"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "303", "累計ゲーム数": "7135", "BIG回数": "44", "REG回数": "12", "推測差枚": "3217", "REG確率": "594", "最有力設定": "設定1", "設定1(%)": "65.1", "設定2(%)": "23.4", "設定3(%)": "8.0", "設定4(%)": "2.3", "設定5(%)": "1.0", "設定6(%)": "0.1"}, {"日付": "2026-07-03", "機種名": "SマイジャグラーV", "台番": "304", "累計ゲーム数": "3496", "BIG回数": "11", "REG回数": "11", "推測差枚": "-465", "REG確率": "317", "最有力設定": "設定1", "設定1(%)": "43.1", "設定2(%)": "21.6", "設定3(%)": "18.6", "設定4(%)": "10.7", "設定5(%)": "4.0", "設定6(%)": "2.0"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "273", "累計ゲーム数": "2644", "BIG回数": "12", "REG回数": "4", "推測差枚": "116", "REG確率": "661", "最有力設定": "設定1", "設定1(%)": "59.5", "設定2(%)": "23.0", "設定3(%)": "11.3", "設定4(%)": "4.2", "設定5(%)": "1.5", "設定6(%)": "0.5"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "274", "累計ゲーム数": "2386", "BIG回数": "5", "REG回数": "9", "推測差枚": "-776", "REG確率": "265", "最有力設定": "設定1", "設定1(%)": "38.7", "設定2(%)": "20.0", "設定3(%)": "19.5", "設定4(%)": "13.0", "設定5(%)": "5.2", "設定6(%)": "3.7"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "275", "累計ゲーム数": "859", "BIG回数": "3", "REG回数": "2", "推測差枚": "-110", "REG確率": "429", "最有力設定": "設定1", "設定1(%)": "48.1", "設定2(%)": "21.1", "設定3(%)": "15.0", "設定4(%)": "8.8", "設定5(%)": "3.9", "設定6(%)": "3.0"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "276", "累計ゲーム数": "6981", "BIG回数": "26", "REG回数": "22", "推測差枚": "41", "REG確率": "317", "最有力設定": "設定1", "設定1(%)": "36.2", "設定2(%)": "21.1", "設定3(%)": "22.6", "設定4(%)": "13.7", "設定5(%)": "4.8", "設定6(%)": "1.5"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "277", "累計ゲーム数": "1792", "BIG回数": "9", "REG回数": "5", "推測差枚": "506", "REG確率": "358", "最有力設定": "設定1", "設定1(%)": "43.8", "設定2(%)": "20.5", "設定3(%)": "16.0", "設定4(%)": "10.6", "設定5(%)": "5.2", "設定6(%)": "3.9"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "278", "累計ゲーム数": "469", "BIG回数": "0", "REG回数": "1", "推測差枚": "-462", "REG確率": "469", "最有力設定": "設定1", "設定1(%)": "49.1", "設定2(%)": "21.2", "設定3(%)": "14.8", "設定4(%)": "8.4", "設定5(%)": "3.6", "設定6(%)": "2.8"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "299", "累計ゲーム数": "8730", "BIG回数": "41", "REG回数": "25", "推測差枚": "1847", "REG確率": "349", "最有力設定": "設定1", "設定1(%)": "37.9", "設定2(%)": "21.8", "設定3(%)": "20.9", "設定4(%)": "12.7", "設定5(%)": "5.4", "設定6(%)": "1.3"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "300", "累計ゲーム数": "2126", "BIG回数": "9", "REG回数": "6", "推測差枚": "205", "REG確率": "354", "最有力設定": "設定1", "設定1(%)": "45.1", "設定2(%)": "21.1", "設定3(%)": "16.3", "設定4(%)": "10.0", "設定5(%)": "4.5", "設定6(%)": "3.0"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "301", "累計ゲーム数": "2751", "BIG回数": "11", "REG回数": "8", "推測差枚": "133", "REG確率": "343", "最有力設定": "設定1", "設定1(%)": "44.5", "設定2(%)": "21.3", "設定3(%)": "17.0", "設定4(%)": "10.2", "設定5(%)": "4.4", "設定6(%)": "2.6"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "302", "累計ゲーム数": "388", "BIG回数": "2", "REG回数": "0", "推測差枚": "18", "REG確率": "0", "最有力設定": "設定1", "設定1(%)": "50.5", "設定2(%)": "21.3", "設定3(%)": "13.9", "設定4(%)": "7.9", "設定5(%)": "3.6", "設定6(%)": "2.9"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "303", "累計ゲーム数": "676", "BIG回数": "0", "REG回数": "1", "推測差枚": "-708", "REG確率": "676", "最有力設定": "設定1", "設定1(%)": "52.7", "設定2(%)": "22.0", "設定3(%)": "14.0", "設定4(%)": "6.9", "設定5(%)": "2.7", "設定6(%)": "1.8"}, {"日付": "2026-07-02", "機種名": "SマイジャグラーV", "台番": "304", "累計ゲーム数": "1399", "BIG回数": "3", "REG回数": "2", "推測差枚": "-753", "REG確率": "699", "最有力設定": "設定1", "設定1(%)": "56.9", "設定2(%)": "22.6", "設定3(%)": "12.6", "設定4(%)": "5.2", "設定5(%)": "1.8", "設定6(%)": "0.9"}];
+        const predictions = [{"台番": "304", "スコア": 74, "タグ": "完全放置・凹み上げ狙い", "前日差枚": "-1539", "diff_3": -2757, "games_3": 8890, "diff_7": -2757, "games_7": 8890, "diff_14": -2757, "games_14": 8890}, {"台番": "278", "スコア": 65, "タグ": "完全放置・凹み上げ狙い", "前日差枚": "-1395", "diff_3": -3050, "games_3": 5869, "diff_7": -3050, "games_7": 5869, "diff_14": -3050, "games_14": 5869}, {"台番": "276", "スコア": 47, "タグ": "前日ちょい勝ち(据え置き期待) / 高稼働マイナス台(お詫び期待)", "前日差枚": "512", "diff_3": -826, "games_3": 19241, "diff_7": -826, "games_7": 19241, "diff_14": -826, "games_14": 19241}, {"台番": "274", "スコア": 24, "タグ": "特筆なし", "前日差枚": "-286", "diff_3": -1516, "games_3": 8976, "diff_7": -1516, "games_7": 8976, "diff_14": -1516, "games_14": 8976}, {"台番": "301", "スコア": 21, "タグ": "特筆なし", "前日差枚": "-891", "diff_3": -1965, "games_3": 7215, "diff_7": -1965, "games_7": 7215, "diff_14": -1965, "games_14": 7215}, {"台番": "275", "スコア": 15, "タグ": "特筆なし", "前日差枚": "-1064", "diff_3": -1829, "games_3": 5368, "diff_7": -1829, "games_7": 5368, "diff_14": -1829, "games_14": 5368}];
+        
+        const grid = document.getElementById('predictionGrid');
+        if (predictions.length === 0) {
+            grid.innerHTML = "<p>推奨台が見つかりませんでした。</p>";
+        } else {
+            const maxScore = Math.max(...predictions.map(p => p.スコア), 150);
+            
+            predictions.forEach((p, idx) => {
+                let rank = idx === 0 ? "👑 1位" : idx === 1 ? "🥈 2位" : idx === 2 ? "🥉 3位" : `${idx+1}位`;
+                let barWidth = Math.max(Math.min((p.スコア / maxScore) * 100, 100), 0);
+                
+                grid.innerHTML += `
+                    <div class="card">
+                        <div class="card-title">
+                            <span>${rank} / 台番 <span style="${getCornerStyle(p.台番)}">${p.台番}</span></span>
+                            <span class="card-score">Score: ${p.スコア}</span>
+                        </div>
+                        <div class="score-bar-bg">
+                            <div class="score-bar-fill" style="width: ${barWidth}%;"></div>
+                        </div>
+                        <div class="card-tag">${p.タグ}</div>
+                        <div style="margin-bottom: 0.5rem; font-size: 0.9rem;">
+                            前日差枚: <strong class="${p.前日差枚 > 0 ? 'diff-positive' : 'diff-negative'}">${p.前日差枚 > 0 ? '+' : ''}${p.前日差枚}枚</strong>
+                        </div>
+                        
+                        <table class="period-stats">
+                            <tr>
+                                <th>期間</th>
+                                <th>推測差枚</th>
+                                <th>総稼働ゲーム数</th>
+                            </tr>
+                            <tr>
+                                <td>過去3日間</td>
+                                <td class="${p.diff_3 > 0 ? 'diff-positive' : 'diff-negative'}"><strong>${p.diff_3 > 0 ? '+' : ''}${p.diff_3.toLocaleString()}枚</strong></td>
+                                <td>${p.games_3.toLocaleString()} G</td>
+                            </tr>
+                            <tr>
+                                <td>過去1週間</td>
+                                <td class="${p.diff_7 > 0 ? 'diff-positive' : 'diff-negative'}"><strong>${p.diff_7 > 0 ? '+' : ''}${p.diff_7.toLocaleString()}枚</strong></td>
+                                <td>${p.games_7.toLocaleString()} G</td>
+                            </tr>
+                            <tr>
+                                <td>過去2週間</td>
+                                <td class="${p.diff_14 > 0 ? 'diff-positive' : 'diff-negative'}"><strong>${p.diff_14 > 0 ? '+' : ''}${p.diff_14.toLocaleString()}枚</strong></td>
+                                <td>${p.games_14.toLocaleString()} G</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+            });
+        }
+
+        
+        function getCornerStyle(daiban) {
+            daiban = parseInt(daiban);
+            let corner = null;
+            const store = 'SUNITOMAN';
+            const machine = 'マイジャグラー';
+            
+            if (store === 'MEGAFACE') {
+                if (machine === 'マイジャグラー') {
+                    if (daiban === 543 || daiban === 544) corner = 'aisle';
+                    if (daiban === 533 || daiban === 554) corner = 'opposite';
+                } else if (machine === 'キング') {
+                    if (daiban === 390) corner = 'aisle';
+                    if (daiban === 373) corner = 'opposite';
+                } else if (machine === 'ニューキング') {
+                    if ([319, 354, 355].includes(daiban)) corner = 'aisle';
+                    if ([336, 337, 372].includes(daiban)) corner = 'opposite';
+                }
+            } else if (store === 'SUNITOMAN') {
+                if (machine === 'ドラゴン') {
+                    if (daiban === 396 || daiban === 425) corner = 'aisle';
+                    if (daiban === 410 || daiban === 411) corner = 'opposite';
+                } else if (machine === 'ニューキング') {
+                    if (daiban === 336 || daiban === 365) corner = 'aisle';
+                    if (daiban === 350 || daiban === 351) corner = 'opposite';
+                } else if (machine === 'マイジャグラー') {
+                    if (daiban === 273 || daiban === 304) corner = 'aisle';
+                    if (daiban === 278 || daiban === 299) corner = 'opposite';
+                }
+            }
+            
+            if (corner === 'aisle') return 'background: rgba(255, 60, 60, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: white;';
+            if (corner === 'opposite') return 'background: rgba(60, 100, 255, 0.4); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: white;';
+            return '';
+        }
+
+        const dateButtonsContainer = document.getElementById('dateButtons');
+        const uniqueDays = [...new Set(rawData.map(item => item['日付']))].sort().reverse();
+        
+        uniqueDays.forEach(day => {
+            const btn = document.createElement('button');
+            btn.className = 'date-btn';
+            btn.textContent = day;
+            btn.onclick = () => selectDate(day, btn);
+            dateButtonsContainer.appendChild(btn);
+        });
+
+        let currentData = [];
+        let sortAsc = true;
+        let currentSortColumn = -1;
+
+        function selectDate(day, btnElement) {
+            document.querySelectorAll('.date-btn').forEach(btn => btn.classList.remove('active'));
+            if(btnElement) btnElement.classList.add('active');
+            
+            currentData = rawData.filter(row => row['日付'] === day);
+            
+            let totalGames = 0; let totalBig = 0; let totalReg = 0; let totalDiff = 0;
+            let count = currentData.length;
+            
+            currentData.forEach(row => {
+                totalGames += parseInt(row['累計ゲーム数']) || 0;
+                totalBig += parseInt(row['BIG回数']) || 0;
+                totalReg += parseInt(row['REG回数']) || 0;
+                totalDiff += parseInt(row['推測差枚']) || 0;
+            });
+            
+            const avgGames = count > 0 ? Math.round(totalGames / count) : 0;
+            const avgDiff = count > 0 ? Math.round(totalDiff / count) : 0;
+            const overallBigProb = totalBig > 0 ? Math.round(totalGames / totalBig) : 0;
+            const overallRegProb = totalReg > 0 ? Math.round(totalGames / totalReg) : 0;
+            const overallTotalProb = (totalBig + totalReg) > 0 ? Math.round(totalGames / (totalBig + totalReg)) : 0;
+            
+            let hallSetting = "設定1 (激辛)";
+            if(overallRegProb > 0) {
+                if(overallRegProb <= 229) hallSetting = "設定6 (極甘)";
+                else if(overallRegProb <= 268) hallSetting = "設定5 (甘)";
+                else if(overallRegProb <= 290) hallSetting = "設定4 (普通)";
+                else if(overallRegProb <= 336) hallSetting = "設定3 (やや辛)";
+                else if(overallRegProb <= 385) hallSetting = "設定2 (辛)";
+            }
+            
+            document.getElementById('sumGames').textContent = `${avgGames} G`;
+            
+            const diffEl = document.getElementById('sumDiff');
+            diffEl.textContent = `${avgDiff > 0 ? '+' : ''}${avgDiff} 枚`;
+            diffEl.className = 'summary-value ' + (avgDiff > 0 ? 'diff-positive' : 'diff-negative');
+            
+            document.getElementById('sumBig').textContent = overallBigProb > 0 ? `1/${overallBigProb}` : '-';
+            document.getElementById('sumReg').textContent = overallRegProb > 0 ? `1/${overallRegProb}` : '-';
+            document.getElementById('sumTotal').textContent = overallTotalProb > 0 ? `1/${overallTotalProb}` : '-';
+            document.getElementById('sumSetting').textContent = hallSetting;
+
+            document.getElementById('dailySummary').classList.add('active');
+            document.getElementById('tableContainer').classList.add('active');
+            
+                        currentSortColumn = '台番';
+            sortAsc = true;
+            currentData.sort((a, b) => parseInt(a['台番']) - parseInt(b['台番']));
+            renderTable(currentData);
+        }
+
+        const tbody = document.getElementById('tableBody');
+        function renderTable(data) {
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                const diff = parseInt(row['推測差枚']);
+                let diffClass = diff > 0 ? 'diff-positive' : 'diff-negative';
+                
+                const setting = row['最有力設定'];
+                let settingClass = 'setting-bad';
+                if (setting.includes('6') || setting.includes('5')) settingClass = 'setting-good';
+                else if (setting.includes('4')) settingClass = 'setting-ok';
+                
+                const p6 = parseFloat(row['設定6(%)']) || 0;
+                const p5 = parseFloat(row['設定5(%)']) || 0;
+                const p4 = parseFloat(row['設定4(%)']) || 0;
+                const p3 = parseFloat(row['設定3(%)']) || 0;
+                const p2 = parseFloat(row['設定2(%)']) || 0;
+                const p1 = parseFloat(row['設定1(%)']) || 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong style="${getCornerStyle(row['台番'])}">${row['台番']}</strong></td>
+                    <td>${row['累計ゲーム数']}</td>
+                    <td>${row['BIG回数']}</td>
+                    <td>${row['REG回数']}</td>
+                    <td class="${diffClass}">${diff > 0 ? '+' : ''}${diff}</td>
+                    <td>1/${row['REG確率']}</td>
+                    <td class="${settingClass}">${setting}</td>
+                    <td>
+                        <div style="font-size: 0.75rem; display: flex; justify-content: space-between; width: 120px;">
+                            <span style="color:#a55eea">6:${Math.round(p6)}%</span>
+                            <span style="color:#ff4757">5:${Math.round(p5)}%</span>
+                            <span style="color:#747d8c">1:${Math.round(p1)}%</span>
+                        </div>
+                        <div class="prob-bar-container">
+                            <div class="prob-6" style="width: ${p6}%"></div>
+                            <div class="prob-5" style="width: ${p5}%"></div>
+                            <div class="prob-4" style="width: ${p4}%"></div>
+                            <div class="prob-3" style="width: ${p3}%"></div>
+                            <div class="prob-2" style="width: ${p2}%"></div>
+                            <div class="prob-1" style="width: ${p1}%"></div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function sortTable(key) {
+            if (!key) return;
+            if (currentSortColumn === key) {
+                sortAsc = !sortAsc;
+            } else {
+                // 台番は昇順、それ以外（差枚、BIG等）は降順スタートが自然
+                sortAsc = (key === '台番') ? true : false;
+            }
+            currentSortColumn = key;
+
+            currentData.sort((a, b) => {
+                let valA = a[key];
+                let valB = b[key];
+                
+                if (key === '最有力設定') {
+                    if (valA < valB) return sortAsc ? -1 : 1;
+                    if (valA > valB) return sortAsc ? 1 : -1;
+                    return 0;
+                }
+                
+                // 台番、G数、BIG、REG、差枚、確率などはすべて数値比較
+                valA = parseFloat(String(valA).replace(/[^0-9.-]+/g, "")) || 0;
+                valB = parseFloat(String(valB).replace(/[^0-9.-]+/g, "")) || 0;
+                
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+            renderTable(currentData);
+        }
+
+                function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // 初期化処理（これを呼ばないとデータテーブルが空になる）
+        if(uniqueDays.length > 0) {
+            selectDate(uniqueDays[0], dateButtonsContainer.firstChild);
+        }
+    </script>
+</body>
+</html>
