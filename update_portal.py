@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import re
+from corner_utils import get_corner_type, get_corner_style
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -157,12 +158,19 @@ for store_key, info in stores.items():
         for i, p in enumerate(top10):
             medal = medals[i] if i < 10 else ""
             color = colors[i] if i < 10 else "#a4b0be"
+            corner = get_corner_type(store_key, p['machine_name'], p['台番'])
+            c_style = get_corner_style(corner)
+            if c_style:
+                daiban_html = f'<span style="{c_style} font-size: 0.8rem;">{p["台番"]}番台</span>'
+            else:
+                daiban_html = f'<span style="color: #a4b0be; font-size: 0.8rem;">{p["台番"]}番台</span>'
+                
             top10_html += f"""
                         <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 0.6rem 1rem; border-radius: 8px; border-left: 4px solid {color};">
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <span style="font-size: 1.2rem;">{medal}</span>
                                 <span style="color: #fff; font-weight: 700; font-size: 0.9rem;">{p['machine_name']}</span>
-                                <span style="color: #a4b0be; font-size: 0.8rem;">{p['台番']}番台</span>
+                                {daiban_html}
                             </div>
                             <div style="color: #f39c12; font-weight: 900; font-size: 1.1rem;">
                                 Score: {p['スコア']}
