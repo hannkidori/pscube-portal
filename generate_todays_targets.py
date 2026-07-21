@@ -1,6 +1,11 @@
 import os
 import pandas as pd
 from datetime import datetime, timedelta
+import sys
+
+# カスタムユーティリティをインポート
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from corner_utils import get_corner_type, get_corner_style
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -95,6 +100,11 @@ def main():
         elif rank == 2: medal_icon = "🥈"
         elif rank == 3: medal_icon = "🥉"
 
+        # 角台ハイライトの適用
+        corner = get_corner_type(row['店舗'], row['機種名'], row['台番'])
+        c_style = get_corner_style(corner)
+        daiban_html = f"<span style='{c_style}'>{row['台番']}番台</span>" if c_style else f"<span class='target-daiban'>{row['台番']}番台</span>"
+
         return f"""
         <div class="target-item">
             <div class="target-header">
@@ -102,7 +112,7 @@ def main():
                 <div class="target-machine">
                     <span class="target-icon">{icon}</span>
                     <span class="target-name">{row['機種名']}</span>
-                    <span class="target-daiban">{row['台番']}番台</span>
+                    {daiban_html}
                 </div>
             </div>
             <div class="target-stats">
