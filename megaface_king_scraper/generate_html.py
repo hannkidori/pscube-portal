@@ -360,7 +360,7 @@ html_content = f"""
                 grid.innerHTML += `
                     <div class="card">
                         <div class="card-title">
-                            <span>${{rank}} / 台番 ${{p.台番}}</span>
+                            <span>${{rank}} / 台番 <span style="${{getCornerStyle(p.台番)}}">${{p.台番}}</span></span>
                             <span class="card-score">Score: ${{p.スコア}}</span>
                         </div>
                         <div class="score-bar-bg">
@@ -521,7 +521,7 @@ html_content = f"""
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${{row['台番']}}</strong></td>
+                    <td><strong style="${{getCornerStyle(row['台番'])}}">${{row['台番']}}</strong></td>
                     <td>${{row['累計ゲーム数']}}</td>
                     <td>${{row['BIG回数']}}</td>
                     <td>${{row['REG回数']}}</td>
