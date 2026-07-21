@@ -21,6 +21,7 @@ for folder in scrapers:
         continue
         
     df = pd.read_csv(csv_path, encoding='utf-8-sig')
+    df['台番'] = df['台番'].astype(int)
     dates = sorted(df['日付'].unique())
     
     if len(dates) < 2:
