@@ -275,6 +275,11 @@ print("Portal index.html has been updated with the latest store stats and Top 3 
 import subprocess
 try:
     print("Generating today's targets page...")
-    subprocess.run(["python", "generate_todays_targets.py"], cwd=base_dir, check=True)
+    subprocess.run(['python', 'generate_todays_targets.py'], cwd=base_dir, check=True)
 except Exception as e:
     print(f"Error generating today's targets: {e}")
+
+try:
+    subprocess.run(['python', 'generate_corner_analysis.py'], cwd=base_dir, check=True)
+except Exception as e:
+    print(f"Error generating corner analysis: {e}")
