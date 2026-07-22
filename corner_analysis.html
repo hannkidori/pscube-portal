@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>角台 比較・検証レポート</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff4757;
+            --bg: #0f141e;
+            --text: #f1f2f6;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --aisle-color: rgba(255, 60, 60, 0.2);
+            --aisle-border: rgba(255, 60, 60, 0.8);
+            --opposite-color: rgba(60, 100, 255, 0.2);
+            --opposite-border: rgba(60, 100, 255, 0.8);
+            --other-color: rgba(255, 255, 255, 0.05);
+            --other-border: rgba(255, 255, 255, 0.3);
+        }
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #fff, #a4b0be);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        .card-header {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+        .comparison-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+        .stat-box {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid;
+        }
+        .stat-box.aisle {
+            background: var(--aisle-color);
+            border-color: var(--aisle-border);
+        }
+        .stat-box.opposite {
+            background: var(--opposite-color);
+            border-color: var(--opposite-border);
+        }
+        .stat-box.other {
+            background: var(--other-color);
+            border-color: var(--other-border);
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #a4b0be;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #fff;
+        }
+        .stat-sub {
+            font-size: 0.75rem;
+            color: #747d8c;
+            margin-top: 0.2rem;
+        }
+        .positive { color: #ff4757; }
+        .negative { color: #00d2d3; }
+        .back-btn {
+            display: block;
+            width: max-content;
+            margin: 2rem auto;
+            padding: 1rem 2rem;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+        .store-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255,255,255,0.1);
+        }
+        .MEGAFACE .store-badge { color: #ff6b81; background: rgba(255, 71, 87, 0.1); }
+        .SUNITOMAN .store-badge { color: #ffa502; background: rgba(255, 165, 2, 0.1); }
+    </style>
+</head>
+<body>
+    <h1>角台 比較・検証レポート (過去全データ)</h1>
+    <a href="index.html" class="back-btn">← ポータルへ戻る</a>
+    
+    <div class="grid">
+
+        <div class="card MEGAFACE">
+            <div style="text-align: center;">
+                <span class="store-badge">メガフェイス豊崎</span>
+            </div>
+            <div class="card-header">ニューキング</div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #a4b0be; text-align: center;">角台 vs その他の台</div>
+            <div class="comparison-row">
+                <div class="stat-box" style="background: rgba(255, 165, 2, 0.1); border-color: #ffa502;">
+                    <div class="stat-label">角台 全体</div>
+                    <div class="stat-value"><span class='negative'>-46枚</span></div>
+                    <div class="stat-sub">平均 5,307G (のべ120件)</div>
+                </div>
+                <div class="stat-box other">
+                    <div class="stat-label">その他の台</div>
+                    <div class="stat-value"><span class='positive'>+52枚</span></div>
+                    <div class="stat-sub">平均 3,813G (のべ960件)</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; margin-top: 1.5rem; color: #a4b0be; text-align: center;">通路側 vs 反対側</div>
+            <div class="comparison-row">
+                <div class="stat-box aisle">
+                    <div class="stat-label">通路側 (赤)</div>
+                    <div class="stat-value"><span class='positive'>+57枚</span></div>
+                    <div class="stat-sub">平均 5,199G (のべ60件)</div>
+                </div>
+                <div class="stat-box opposite">
+                    <div class="stat-label">反対側 (青)</div>
+                    <div class="stat-value"><span class='negative'>-150枚</span></div>
+                    <div class="stat-sub">平均 5,415G (のべ60件)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card MEGAFACE">
+            <div style="text-align: center;">
+                <span class="store-badge">メガフェイス豊崎</span>
+            </div>
+            <div class="card-header">キング</div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #a4b0be; text-align: center;">角台 vs その他の台</div>
+            <div class="comparison-row">
+                <div class="stat-box" style="background: rgba(255, 165, 2, 0.1); border-color: #ffa502;">
+                    <div class="stat-label">角台 全体</div>
+                    <div class="stat-value"><span class='positive'>+738枚</span></div>
+                    <div class="stat-sub">平均 4,257G (のべ40件)</div>
+                </div>
+                <div class="stat-box other">
+                    <div class="stat-label">その他の台</div>
+                    <div class="stat-value"><span class='positive'>+732枚</span></div>
+                    <div class="stat-sub">平均 3,158G (のべ320件)</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; margin-top: 1.5rem; color: #a4b0be; text-align: center;">通路側 vs 反対側</div>
+            <div class="comparison-row">
+                <div class="stat-box aisle">
+                    <div class="stat-label">通路側 (赤)</div>
+                    <div class="stat-value"><span class='positive'>+993枚</span></div>
+                    <div class="stat-sub">平均 3,998G (のべ20件)</div>
+                </div>
+                <div class="stat-box opposite">
+                    <div class="stat-label">反対側 (青)</div>
+                    <div class="stat-value"><span class='positive'>+482枚</span></div>
+                    <div class="stat-sub">平均 4,517G (のべ20件)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card MEGAFACE">
+            <div style="text-align: center;">
+                <span class="store-badge">メガフェイス豊崎</span>
+            </div>
+            <div class="card-header">マイジャグ</div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #a4b0be; text-align: center;">角台 vs その他の台</div>
+            <div class="comparison-row">
+                <div class="stat-box" style="background: rgba(255, 165, 2, 0.1); border-color: #ffa502;">
+                    <div class="stat-label">角台 全体</div>
+                    <div class="stat-value"><span class='negative'>-130枚</span></div>
+                    <div class="stat-sub">平均 3,826G (のべ80件)</div>
+                </div>
+                <div class="stat-box other">
+                    <div class="stat-label">その他の台</div>
+                    <div class="stat-value"><span class='negative'>-161枚</span></div>
+                    <div class="stat-sub">平均 3,196G (のべ360件)</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; margin-top: 1.5rem; color: #a4b0be; text-align: center;">通路側 vs 反対側</div>
+            <div class="comparison-row">
+                <div class="stat-box aisle">
+                    <div class="stat-label">通路側 (赤)</div>
+                    <div class="stat-value"><span class='negative'>-201枚</span></div>
+                    <div class="stat-sub">平均 4,249G (のべ40件)</div>
+                </div>
+                <div class="stat-box opposite">
+                    <div class="stat-label">反対側 (青)</div>
+                    <div class="stat-value"><span class='negative'>-59枚</span></div>
+                    <div class="stat-sub">平均 3,402G (のべ40件)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card SUNITOMAN">
+            <div style="text-align: center;">
+                <span class="store-badge">サンシャイン糸満</span>
+            </div>
+            <div class="card-header">ドラゴン</div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #a4b0be; text-align: center;">角台 vs その他の台</div>
+            <div class="comparison-row">
+                <div class="stat-box" style="background: rgba(255, 165, 2, 0.1); border-color: #ffa502;">
+                    <div class="stat-label">角台 全体</div>
+                    <div class="stat-value"><span class='negative'>-214枚</span></div>
+                    <div class="stat-sub">平均 4,520G (のべ72件)</div>
+                </div>
+                <div class="stat-box other">
+                    <div class="stat-label">その他の台</div>
+                    <div class="stat-value"><span class='positive'>+165枚</span></div>
+                    <div class="stat-sub">平均 3,761G (のべ468件)</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; margin-top: 1.5rem; color: #a4b0be; text-align: center;">通路側 vs 反対側</div>
+            <div class="comparison-row">
+                <div class="stat-box aisle">
+                    <div class="stat-label">通路側 (赤)</div>
+                    <div class="stat-value"><span class='negative'>-471枚</span></div>
+                    <div class="stat-sub">平均 4,298G (のべ36件)</div>
+                </div>
+                <div class="stat-box opposite">
+                    <div class="stat-label">反対側 (青)</div>
+                    <div class="stat-value"><span class='positive'>+43枚</span></div>
+                    <div class="stat-sub">平均 4,742G (のべ36件)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card SUNITOMAN">
+            <div style="text-align: center;">
+                <span class="store-badge">サンシャイン糸満</span>
+            </div>
+            <div class="card-header">ニューキング</div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #a4b0be; text-align: center;">角台 vs その他の台</div>
+            <div class="comparison-row">
+                <div class="stat-box" style="background: rgba(255, 165, 2, 0.1); border-color: #ffa502;">
+                    <div class="stat-label">角台 全体</div>
+                    <div class="stat-value"><span class='negative'>-363枚</span></div>
+                    <div class="stat-sub">平均 5,018G (のべ80件)</div>
+                </div>
+                <div class="stat-box other">
+                    <div class="stat-label">その他の台</div>
+                    <div class="stat-value"><span class='positive'>+10枚</span></div>
+                    <div class="stat-sub">平均 3,738G (のべ520件)</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; margin-top: 1.5rem; color: #a4b0be; text-align: center;">通路側 vs 反対側</div>
+            <div class="comparison-row">
+                <div class="stat-box aisle">
+                    <div class="stat-label">通路側 (赤)</div>
+                    <div class="stat-value"><span class='negative'>-634枚</span></div>
+                    <div class="stat-sub">平均 5,383G (のべ40件)</div>
+                </div>
+                <div class="stat-box opposite">
+                    <div class="stat-label">反対側 (青)</div>
+                    <div class="stat-value"><span class='negative'>-93枚</span></div>
+                    <div class="stat-sub">平均 4,653G (のべ40件)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card SUNITOMAN">
+            <div style="text-align: center;">
+                <span class="store-badge">サンシャイン糸満</span>
+            </div>
+            <div class="card-header">マイジャグ</div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #a4b0be; text-align: center;">角台 vs その他の台</div>
+            <div class="comparison-row">
+                <div class="stat-box" style="background: rgba(255, 165, 2, 0.1); border-color: #ffa502;">
+                    <div class="stat-label">角台 全体</div>
+                    <div class="stat-value"><span class='positive'>+155枚</span></div>
+                    <div class="stat-sub">平均 4,827G (のべ80件)</div>
+                </div>
+                <div class="stat-box other">
+                    <div class="stat-label">その他の台</div>
+                    <div class="stat-value"><span class='positive'>+79枚</span></div>
+                    <div class="stat-sub">平均 4,099G (のべ160件)</div>
+                </div>
+            </div>
+            
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem; margin-top: 1.5rem; color: #a4b0be; text-align: center;">通路側 vs 反対側</div>
+            <div class="comparison-row">
+                <div class="stat-box aisle">
+                    <div class="stat-label">通路側 (赤)</div>
+                    <div class="stat-value"><span class='positive'>+23枚</span></div>
+                    <div class="stat-sub">平均 5,539G (のべ40件)</div>
+                </div>
+                <div class="stat-box opposite">
+                    <div class="stat-label">反対側 (青)</div>
+                    <div class="stat-value"><span class='positive'>+288枚</span></div>
+                    <div class="stat-sub">平均 4,115G (のべ40件)</div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
