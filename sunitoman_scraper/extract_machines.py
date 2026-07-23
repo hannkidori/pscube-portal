@@ -84,10 +84,9 @@ def process_file(filepath):
 
     soup = BeautifulSoup(html_content, 'html.parser')
     
-    # 日付の決定
-    now = datetime.datetime.now()
-    if now.hour < 9:
-        now = now - datetime.timedelta(days=1)
+    mtime = os.path.getmtime(filepath)
+    dt = datetime.datetime.fromtimestamp(mtime)
+    base_date = dt.date()
     
     date_offset = 0
     active_tabs = soup.find_all(class_='is-active')
@@ -105,7 +104,7 @@ def process_file(filepath):
             except:
                 pass
     
-    target_date = (now - datetime.timedelta(days=date_offset)).strftime("%Y-%m-%d")
+    target_date = (base_date - datetime.timedelta(days=date_offset)).strftime("%Y-%m-%d")
     
     # テーブル行の取得
     rows = soup.find_all('tr')

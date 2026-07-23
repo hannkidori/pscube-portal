@@ -131,7 +131,8 @@ def main():
     try:
         subprocess.run(['python', 'validate_daily_166.py'], cwd=base_dir, check=True)
     except subprocess.CalledProcessError:
-        print("\n❌ データの抽出が不完全なため、処理を中断しました。")
+        print("\n[ERROR] データ抽出に失敗したか、欠損データがあります。")
+        print("不足しているHTMLファイルを追加してから、再度実行してください。")
         sys.exit(1)
     except Exception as e:
         print(f"Error running validate_daily_166.py: {e}")
