@@ -86,7 +86,10 @@ def process_file(filepath):
     
     mtime = os.path.getmtime(filepath)
     dt = datetime.datetime.fromtimestamp(mtime)
-    base_date = dt.date()
+    if dt.hour < 5:
+        base_date = (dt - datetime.timedelta(days=1)).date()
+    else:
+        base_date = dt.date()
     
     date_offset = 0
     active_tabs = soup.find_all(class_='is-active')

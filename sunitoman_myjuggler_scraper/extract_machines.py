@@ -75,7 +75,11 @@ def process_file(filepath):
     soup = BeautifulSoup(html_content, 'html.parser')
     
     mtime = os.path.getmtime(filepath)
-    now = datetime.datetime.fromtimestamp(mtime)
+    dt = datetime.datetime.fromtimestamp(mtime)
+    if dt.hour < 5:
+        base_date = (dt - datetime.timedelta(days=1)).date()
+    else:
+        base_date = dt.date()
     
     date_offset = 0
     active_tabs = soup.find_all(class_='is-active')
@@ -92,10 +96,7 @@ def process_file(filepath):
             except:
                 pass
                 
-    if now.hour < 9 and date_offset == 0:
-        now = now - datetime.timedelta(days=1)
-    
-    target_date = (now - datetime.timedelta(days=date_offset)).strftime("%Y-%m-%d")
+    target_date = (base_date - datetime.timedelta(days=date_offset)).strftime("%Y-%m-%d")
     
     rows = soup.find_all('tr')
     
